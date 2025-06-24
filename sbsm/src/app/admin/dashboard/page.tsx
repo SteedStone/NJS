@@ -115,7 +115,8 @@ export default function DashboardPage() {
             : "bg-gray-200 text-[#1c140d]"
         }`}
       >
-        📦 Produits
+                📦 Produits
+
       </button>
       <button
         onClick={() => setActiveTab("add")}
@@ -125,7 +126,8 @@ export default function DashboardPage() {
             : "bg-gray-200 text-[#1c140d]"
         }`}
       >
-        ➕ Ajouter
+                ➕ Ajouter
+
       </button>
       <button
         onClick={() => setActiveTab("orders")}
@@ -135,6 +137,7 @@ export default function DashboardPage() {
             : "bg-gray-200 text-[#1c140d]"
         }`}
       >
+        
         📋 Commandes
       </button>
       <button
@@ -150,7 +153,7 @@ export default function DashboardPage() {
     </div>
 
    
-      {activeTab === "products" && (
+      {activeTab === "add" && (
 
       <form
         onSubmit={handleAddProduct}
@@ -210,7 +213,7 @@ export default function DashboardPage() {
         </button>
       </form>
       )}
-      {activeTab === "add" && (
+      {activeTab === "orders" && (
         <ul className="space-y-2">
           {orders.length === 0 && <p>Aucune commande trouvée.</p>}
           {orders.map((order) => (
@@ -229,7 +232,7 @@ export default function DashboardPage() {
           ))}
         </ul>
       )}
-      {activeTab === "orders" && (
+      {activeTab === "products" && (
 
       <ul className="space-y-2">
         {products.map((product) => (
