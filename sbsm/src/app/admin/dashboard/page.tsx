@@ -12,6 +12,7 @@ type Product = {
   price: number;
   quantity: number;
   image?: string;
+  archived?: boolean; // Ajouté pour gérer l'archivage
   
 };
 
@@ -20,6 +21,7 @@ type Order = {
   name: string;
   email: string;
   createdAt: string;
+  validated: boolean;
   items: {
     id: string;
     quantity: number;
@@ -41,7 +43,7 @@ export default function DashboardPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [restockValue, setRestockValue] = useState<{ [id: string]: number }>({});
-  const [activeTab, setActiveTab] = useState<"products" | "add" | "orders" | "archived">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "add" | "orders" | "archived" | "history">("products");
   const [showArchived, setShowArchived] = useState(false); // Toggle for showing archived products
 
 
@@ -49,10 +51,10 @@ export default function DashboardPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => setProducts(data));
-  }, []);
+  fetch("/api/products?includeArchived=true")
+    .then(res => res.json())
+    .then(data => setProducts(data));
+}, []);
   useEffect(() => {
   fetch("/api/order")
     .then((res) => res.json())
@@ -102,6 +104,24 @@ export default function DashboardPage() {
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
+  const handleValidateOrder = async (orderId: string) => {
+    const res = await fetch("/api/order/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId }),
+    });
+
+    if (res.ok) {
+      setOrders(prev =>
+        prev.map(order =>
+          order.id === orderId ? { ...order, validated: true } : order
+        )
+      );
+    } else {
+      alert("Échec de l'archivage de la commande.");
+    }
+  };
+
 
   return (
      <div className="p-8 max-w-2xl mx-auto space-y-6">
@@ -149,6 +169,16 @@ export default function DashboardPage() {
         }`}
       >
          Archive
+      </button>
+      <button
+        onClick={() => setActiveTab("history")}
+        className={`px-4 py-2 rounded font-semibold ${
+          activeTab === "history"
+            ? "bg-[#1c140d] text-white"
+            : "bg-gray-200 text-[#1c140d]"
+        }`}
+      >
+        📦 Historique
       </button>
     </div>
 
@@ -216,7 +246,8 @@ export default function DashboardPage() {
       {activeTab === "orders" && (
         <ul className="space-y-2">
           {orders.length === 0 && <p>Aucune commande trouvée.</p>}
-          {orders.map((order) => (
+          {orders.filter(order => !order.validated).map(order => (
+
             <li key={order.id} className="p-4 border rounded bg-white shadow">
               <p className="font-bold">Commande #{order.id}</p>
               <p>Client : {order.name} ({order.email})</p>
@@ -228,14 +259,23 @@ export default function DashboardPage() {
                   </li>
                 ))}
               </ul>
+              <button
+                onClick={() => handleValidateOrder(order.id)}
+                className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm"
+              >
+                ✔ Valider
+              </button>
             </li>
+            
+            
           ))}
         </ul>
       )}
       {activeTab === "products" && (
 
       <ul className="space-y-2">
-        {products.map((product) => (
+        {products.filter(p => !p.archived).map(product => (
+
           <li key={product.id} className="p-4 border rounded-xl bg-white shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div className="flex items-center gap-4">
         {product.image && (
@@ -291,30 +331,23 @@ export default function DashboardPage() {
             >
               ➕ Restocker
             </button>
-            <button
+           <button
               onClick={async () => {
-                const quantityToAdd = restockValue[product.id] || 0;
-                if (quantityToAdd <= 0) return;
-
                 const res = await fetch("/api/products", {
-                  method: "PATCH",
+                  method: "PUT",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ id: product.id, quantityToAdd }),
+                  body: JSON.stringify({ id: product.id, archive: true }),
                 });
 
                 if (res.ok) {
-                  const updated = await res.json();
-                  setProducts((prev) =>
-                    prev.map((p) =>
-                      p.id === updated.id ? { ...p, quantity: updated.quantity } : p
-                    )
-                  );
-                  setRestockValue((prev) => ({ ...prev, [product.id]: 0 }));
+                  setProducts(prev => prev.map(p => 
+                    p.id === product.id ? { ...p, archived: true } : p
+                  ));
                 }
               }}
               className="bg-red-600 text-white px-3 py-1 rounded text-sm"
             >
-               Archiver
+              Archiver
             </button>
           </div>
         </li>
@@ -325,10 +358,75 @@ export default function DashboardPage() {
       </ul>
       )}
       {activeTab === "archived" && (
-        <div className="p-4 bg-white rounded shadow">
-          <h2 className="text-lg font-semibold mb-4">Produits archivés</h2>
-          <p>Aucune fonctionnalité d'archivage implémentée pour l'instant.</p>
+  <ul className="space-y-2">
+    {products.filter(p => p.archived).map(product => (
+      <li key={product.id} className="p-4 border rounded-xl bg-gray-100 shadow-sm flex justify-between items-center">
+        <div>
+          <p className="font-semibold">{product.name}</p>
+          <p className="text-sm text-gray-500">{product.price} € — Stock : {product.quantity}</p>
         </div>
+        <button
+          onClick={async () => {
+            const res = await fetch("/api/products", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: product.id, archive: false }),
+            });
+
+            if (res.ok) {
+              setProducts(prev => prev.map(p =>
+                p.id === product.id ? { ...p, archived: false } : p
+              ));
+            }
+          }}
+          className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
+        >
+          ✅ Rendre disponible
+        </button>
+      </li>
+    ))}
+  </ul>
+)}
+
+      {activeTab === "history" && (
+        <ul className="space-y-2">
+          {orders.filter(order => order.validated).map(order => (
+            <li key={order.id} className="p-4 border rounded bg-white shadow flex justify-between items-start">
+              <div>
+                <p className="font-bold">Commande #{order.id}</p>
+                <p>Client : {order.name} ({order.email})</p>
+                <p>Date : {new Date(order.createdAt).toLocaleString()}</p>
+                <ul className="ml-4 list-disc">
+                  {order.items.map((item) => (
+                    <li key={item.id}>
+                      {item.product.name} — {item.quantity}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button
+                onClick={async () => {
+                  const res = await fetch("/api/order/validate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ orderId: order.id, validated: false }),
+                  });
+
+                  if (res.ok) {
+                    setOrders(prev => prev.map(o =>
+                      o.id === order.id ? { ...o, validated: false } : o
+                    ));
+                  } else {
+                    alert("Échec de la désarchivage de la commande.");
+                  }
+                }}
+                className="bg-gray-400 text-white px-3 py-1 rounded text-sm"
+              >
+                ❌ Rétablir
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
       

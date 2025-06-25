@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 export type Product = {
   id: string;
   name: string;
+  price: number;
   quantity: number;
   image?: string;
 };
@@ -102,7 +103,12 @@ export default function OrderPage() {
                   </p>
                   <p className="text-sm text-gray-600">
                     {isAvailable ? product.quantity : 0} disponibles 
-                    
+                  </p>
+                  <p className="text-lg font-bold text-[#1c140d]">
+                    {new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "EUR",
+                    }).format(product.price)}
                   </p>
                   
                   <div className="flex items-center justify-center gap-2">

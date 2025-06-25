@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 
 export default function CartDropdown() {
-  const { cart, getTotalItems, removeFromCart } = useCart();
+  const { cart, getTotalItems, removeFromCart , getTotalPrice } = useCart();
   const [open, setOpen] = useState(false);
 
   return (
@@ -40,7 +40,7 @@ export default function CartDropdown() {
                       <div>
                         <div className="font-medium">{item.name}</div>
                         <div className="text-xs text-gray-500">
-                          {item.quantity} × 
+                          {item.quantity} × {item.price?.toFixed(2)} € = {(item.quantity * (item.price ?? 0)).toFixed(2)} €
                         </div>
                       </div>
                     </div>
@@ -53,6 +53,9 @@ export default function CartDropdown() {
                   </li>
                 ))}
               </ul>
+              <div className="px-4 py-2 border-t text-sm font-bold text-right">
+                Total : {getTotalPrice().toFixed(2)} €
+              </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

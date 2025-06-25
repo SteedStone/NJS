@@ -6,12 +6,14 @@ export type CartItem = {
   name: string;
   quantity: number;
   available: number;
+  price?: number;
   image?: string;
 };
 
 export type Product = {
   id: string;
   name: string;
+  price: number;
   quantity: number;
   image?: string;
 };
@@ -29,6 +31,12 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
 
+  const getTotalPrice = useCallback(() => {
+    return cart.reduce((total, item) => {
+      const itemTotal = item.price ? item.price * item.quantity : 0;
+      return total + itemTotal;
+    }, 0);
+  }, [cart]);
   const getTotalItems = useCallback(() => {
     return cart.length;
   }, [cart]);
@@ -46,6 +54,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
                 ...item,
                 quantity: clampedQuantity,
                 available: product.quantity,
+                price: product.price,
               }
             : item
         );
@@ -57,6 +66,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           id: product.id,
           name: product.name,
           quantity: clampedQuantity,
+          price: product.price,
           available: product.quantity,
           image: product.image,
         },
@@ -93,6 +103,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     removeFromCart,
     updateQuantity,
     getTotalItems,
+    getTotalPrice,
   };
 
   return (

@@ -80,6 +80,7 @@ model Product {
   quantity   Int
   createdAt  DateTime   @default(now())
   orderItems OrderItem[]
+  archived  Boolean  @default(false) // ✅ Ce champ est nécessaire
   image String? // 👈 optionnel
 
 }
@@ -90,6 +91,8 @@ model Order {
   items     OrderItem[]
   name      String
   email     String
+  validated Boolean    @default(false) // ✅ Permet de filtrer les commandes validées
+
 }
 
 model OrderItem {

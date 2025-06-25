@@ -1,21 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
-  const { password } = await req.json();
+export async function POST(request: Request) {
+  const { password } = await request.json();
 
-  if (password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: "Mot de passe incorrect" }, { status: 401 });
+  if (password === process.env.ADMIN_PASSWORD) {
+    const response = NextResponse.json({ success: true });
+    response.cookies.set("admin_logged_in", "true", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60, // 2 heures
+    });
+    return response;
   }
 
-  const res = NextResponse.json({ success: true });
-
-  // Cookie valable 30 minutes
-  res.cookies.set("auth", "admin", {
-    httpOnly: true,
-    path: "/",
-    maxAge: 10, // 30 minutes
-    sameSite: "lax",
-  });
-
-  return res;
+  return NextResponse.json({ success: false }, { status: 401 });
 }

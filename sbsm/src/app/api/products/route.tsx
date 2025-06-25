@@ -3,10 +3,15 @@ import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const includeArchived = url.searchParams.get("includeArchived") === "true";
+
   const products = await prisma.product.findMany({
-    orderBy: { createdAt: "desc" }
+    where: includeArchived ? {} : { archived: false },
+    orderBy: { createdAt: "desc" },
   });
+
   return NextResponse.json(products);
 }
 
@@ -47,4 +52,19 @@ export async function PATCH(req: Request) {
     console.error("Erreur PATCH /products :", error);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
+}
+
+export async function PUT(req: Request) {
+  const { id, archive } = await req.json();
+
+  if (!id || typeof archive !== "boolean") {
+    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+  }
+
+  const updated = await prisma.product.update({
+    where: { id },
+    data: { archived: archive },
+  });
+
+  return NextResponse.json(updated);
 }
