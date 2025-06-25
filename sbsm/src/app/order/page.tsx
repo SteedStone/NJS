@@ -10,12 +10,28 @@ export type Product = {
   price: number;
   quantity: number;
   image?: string;
+  description?: string;
+  categories?: string[];
 };
+
+
+const PREDEFINED_CATEGORIES = [
+  "Pâtisserie",
+  "Viennoiserie",
+  "Sans gluten",
+  "Sans sucre",
+  "Vegan",
+  "Bio"
+];  
 
 export default function OrderPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedQuantities, setSelectedQuantities] = useState<{[key: string]: number}>({});
   const { cart, addToCart, removeFromCart } = useCart();
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+
 
   useEffect(() => {
     fetch("/api/products")
@@ -70,24 +86,78 @@ export default function OrderPage() {
   const productsExist = products.length > 0;
 
   return (
-    <div className="relative min-h-screen bg-[#fcfaf8] px-10 py-12">
-      <h1 className="text-3xl font-bold text-[#1c140d] mb-8">
-        Commander vos produits 🛒
-      </h1>
+  <div className="min-h-screen bg-[#fcfaf8] px-4 py-8 md:px-10 md:py-12 flex gap-8">
+    {/* 🧭 MENU LATÉRAL */}
+    <aside className="w-48 shrink-0">
+      <h2 className="text-lg font-semibold text-[#1c140d] mb-4">Catégories</h2>
+      <ul className="space-y-2">
+        <li>
+          <button
+            onClick={() => setSelectedCategories([])}
+            className={`w-full text-left px-3 py-1.5 rounded ${
+              selectedCategories.length === 0
+                ? "bg-[#1c140d] text-white"
+                : "text-[#1c140d] hover:bg-gray-200"
+            }`}
+          >
+            Tous les produits
+          </button>
+        </li>
+        {PREDEFINED_CATEGORIES.map((cat) => (
+          <li key={cat}>
+            <button
+              onClick={() => setSelectedCategories([cat])}
+              className={`w-full text-left px-3 py-1.5 rounded ${
+                selectedCategories.includes(cat)
+                  ? "bg-[#1c140d] text-white"
+                  : "text-[#1c140d] hover:bg-gray-200"
+              }`}
+            >
+              {cat}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </aside>
 
-      {productsExist ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-12">
-          {products.map((product) => {
+    {/* 🧁 CONTENU PRINCIPAL */}
+    <main className="flex-1">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-bold text-[#1c140d]">
+          {selectedCategories.length === 0
+            ? "Tous les produits"
+            : selectedCategories[0]}
+        </h1>
+
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+          placeholder="🔍 Rechercher un produit..."
+          className="w-full md:w-64 border px-3 py-1.5 rounded bg-white text-sm"
+        />
+      </div>
+
+      {/* 📦 AFFICHAGE DES PRODUITS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        {products
+          .filter((p) =>
+            selectedCategories.length === 0 ||
+            p.categories?.some((cat) => selectedCategories.includes(cat))
+          )
+          .filter((p) =>
+            p.name.toLowerCase().includes(searchTerm)
+          )
+          .map((product) => {
             const isAvailable = product.quantity > 0;
             const selectedQuantity = selectedQuantities[product.id] || 0;
-            const isInCart = cart.some(item => item.id === product.id);
+            const isInCart = cart.some((item) => item.id === product.id);
 
             return (
-              <div 
-                key={product.id} 
+              <div
+                key={product.id}
                 className="flex flex-col gap-3 bg-white rounded-xl p-4 shadow-md h-full"
               >
-                {/* Fixed size image container */}
                 <div className="aspect-square w-full overflow-hidden rounded-lg">
                   <div
                     className="w-full h-full bg-cover bg-center"
@@ -96,11 +166,22 @@ export default function OrderPage() {
                     }}
                   ></div>
                 </div>
-                
+
                 <div className="flex flex-col gap-2 flex-grow">
                   <p className="text-[#1c140d] text-base font-medium leading-normal line-clamp-2 h-12">
                     {product.name}
                   </p>
+                  <p className="text-sm text-gray-600 line-clamp-3">
+                    {product.description}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {product.categories?.map((cat, idx) => (
+                      <span key={idx} className="text-xs bg-[#f3ede7] text-[#1c140d] px-2 py-0.5 rounded-full">
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
                   <p className="text-sm text-gray-600">
                     {isAvailable ? product.quantity : 0} disponibles 
                   </p>
@@ -110,7 +191,7 @@ export default function OrderPage() {
                       currency: "EUR",
                     }).format(product.price)}
                   </p>
-                  
+
                   <div className="flex items-center justify-center gap-2">
                     <motion.button
                       whileTap={{ scale: 0.95 }}
@@ -120,7 +201,7 @@ export default function OrderPage() {
                     >
                       -
                     </motion.button>
-                    
+
                     <input
                       type="number"
                       min={0}
@@ -135,7 +216,7 @@ export default function OrderPage() {
                       disabled={!isAvailable}
                       className="w-16 px-2 py-1 border rounded text-center text-sm bg-white"
                     />
-                    
+
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleIncrement(product.id)}
@@ -145,7 +226,7 @@ export default function OrderPage() {
                       +
                     </motion.button>
                   </div>
-                  
+
                   <div className="mt-2">
                     {isInCart ? (
                       <motion.button
@@ -172,12 +253,18 @@ export default function OrderPage() {
               </div>
             );
           })}
-        </div>
-      ) : (
-        <p className="text-center text-lg text-[#1c140d]">
-          Pas de produits disponibles.
+      </div>
+
+      {/* 🛑 Aucun produit trouvé */}
+      {products.filter((p) =>
+        (selectedCategories.length === 0 || p.categories?.some((cat) => selectedCategories.includes(cat))) &&
+        p.name.toLowerCase().includes(searchTerm)
+      ).length === 0 && (
+        <p className="text-center text-gray-500 mt-8">
+          Aucun produit trouvé.
         </p>
       )}
-    </div>
-  );
+    </main>
+  </div>
+);
 }

@@ -82,6 +82,8 @@ model Product {
   orderItems OrderItem[]
   archived  Boolean  @default(false) // ✅ Ce champ est nécessaire
   image String? // 👈 optionnel
+  description String?  // 🆕 Description visible côté client
+  categories  String[] // 🆕 Liste de catégories (ex: ["Pâtisserie", "Sans gluten"])
 
 }
 

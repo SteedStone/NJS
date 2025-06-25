@@ -1,24 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import SplitText from "SplitText";
-
+import SplitText from "./animation/SplitText";
+import TiltedCard from "./animation/TiltedCard";
+import DotGrid from "./animation/DotGrid";
+import { motion } from "framer-motion";
 
 export default function HomePage() {
   return (
-    <div className="bg-[#fcfaf8] min-h-screen font-['Epilogue','Noto Sans',sans-serif]">
-      {/* Hero Banner */}
-      <section
-        className="bg-cover bg-center text-white flex flex-col items-center justify-center text-center px-6 py-32"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1606851091899-bb3fdbec0fa4?auto=format&fit=crop&w=1950&q=80')",
-        }}
+    <div className="min-h-screen font-['Epilogue','Noto Sans',sans-serif] relative overflow-hidden">
+      {/* DotGrid background */}
+      <div className="absolute inset-0 -z-10">
+        <DotGrid
+          dotSize={10}
+          gap={18}
+          baseColor="#f0eae4"
+          activeColor="#eb7f13"
+          proximity={120}
+          shockRadius={250}
+          shockStrength={5}
+          resistance={750}
+          returnDuration={1.5}
+        />
+      </div>
+
+      {/* Hero Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1 }}
+        className="flex flex-col items-center justify-center text-center px-6 py-32"
       >
-        
         <SplitText
-          text="Hello, GSAP!"
-          className="text-2xl font-semibold text-center"
+          text="The Daily Crumb"
+          className="text-5xl font-black mb-4 text-[#1c140d]"
           delay={100}
           duration={0.6}
           ease="power3.out"
@@ -28,92 +43,115 @@ export default function HomePage() {
           threshold={0.1}
           rootMargin="-100px"
           textAlign="center"
-          onLetterAnimationComplete={handleAnimationComplete}
         />
-        <h1 className="text-5xl font-black mb-4">The Daily Crumb</h1>
-        <p className="text-lg max-w-xl mb-6">
+        <p className="text-lg max-w-xl mb-6 text-[#1c140d]">
           Boulangerie artisanale — pains frais, viennoiseries dorées, douceurs maison, tous les jours.
         </p>
         <Link
           href="/order"
-          className="bg-[#eb7f13] text-[#1b140d] font-bold px-6 py-3 rounded-lg hover:bg-[#d67110] transition"
+          className="bg-[#eb7f13] text-white font-bold px-6 py-3 rounded-lg hover:bg-[#d67110] transition"
         >
           Commander maintenant
         </Link>
-      </section>
+      </motion.section>
+    
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-20 space-y-24">
+      {/* Specials Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true }}
+        className="max-w-6xl mx-auto px-6 py-20"
+      >
+      <div className="bg-white/70 rounded-xl p-6 shadow-md">
 
-        {/* Nos Spécialités */}
-        <section>
-          <h2 className="text-3xl font-bold mb-8 text-[#1b140d] text-center">Nos Spécialités</h2>
-          <div className="grid md:grid-cols-3 gap-10">
-            {[
-              {
-                title: "Pains au levain",
-                desc: "Cuits à la perfection, avec une croûte dorée et une mie aérée.",
-                img: "https://images.unsplash.com/photo-1607522370275-34c3c1801f43?auto=format&fit=crop&w=800&q=80",
-              },
-              {
-                title: "Viennoiseries",
-                desc: "Croissants, pains au chocolat, brioches moelleuses… tous faits maison.",
-                img: "https://images.unsplash.com/photo-1576402187878-974f1fd61c5b?auto=format&fit=crop&w=800&q=80",
-              },
-              {
-                title: "Gâteaux personnalisés",
-                desc: "Pour toutes les occasions, réalisés avec soin et créativité.",
-                img: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80",
-              },
-            ].map((item, i) => (
-              <div key={i} className="bg-white rounded-xl shadow hover:shadow-lg transition">
-                <div
-                  className="aspect-video rounded-t-xl bg-cover bg-center"
-                  style={{ backgroundImage: `url(${item.img})` }}
-                />
-                <div className="p-4 space-y-1">
-                  <h3 className="text-lg font-semibold text-[#1b140d]">{item.title}</h3>
-                  <p className="text-sm text-[#9a734c]">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <h2 className="text-3xl font-bold mb-8 text-[#1b140d] text-center">
+          Nos Spécialités
+        </h2>
+        <div className="grid md:grid-cols-3 gap-10">
+          {[
+            {
+              img: "/images/pain3.jpg",
+              title: "Pains au levain",
+              desc: "Cuits à la perfection, avec une croûte dorée et une mie aérée.",
+            },
+            {
+              img: "/images/pain2.jpg",
+              title: "Viennoiseries",
+              desc: "Croissants, pains au chocolat, brioches moelleuses… tous faits maison.",
+            },
+            {
+              img: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80",
+              title: "Gâteaux personnalisés",
+              desc: "Pour toutes les occasions, réalisés avec soin et créativité.",
+            },
+          ].map((item, i) => (
+            <TiltedCard
+              key={i}
+              imageSrc={item.img}
+              altText={item.title}
+              captionText={item.title}
+              rotateAmplitude={12}
+              scaleOnHover={1.1}
+              overlayText={item.desc}
+            />
+          ))}
+        </div>
+      </div>
+      </motion.section>
 
-        {/* À propos */}
-        <section className="flex flex-col md:flex-row items-center gap-10">
-          <img
-            src="https://images.unsplash.com/photo-1556911073-52527ac437f5?auto=format&fit=crop&w=800&q=80"
-            alt="Boulangerie"
-            className="w-full md:w-1/2 rounded-xl shadow-md"
-          />
-          <div className="md:w-1/2 space-y-4">
-            <h2 className="text-2xl font-bold text-[#1b140d]">Notre Histoire</h2>
-            <p className="text-base text-[#1b140d]">
-              Fondée en 2020, notre boulangerie vise à offrir à la communauté des produits frais et faits maison
-              chaque jour. Notre passion ? Le goût, l'authenticité, et le partage.
-            </p>
-            <Link
-              href="/our-story"
-              className="inline-block mt-2 text-[#eb7f13] font-medium hover:underline"
-            >
-              En savoir plus →
-            </Link>
-          </div>
-        </section>
-
-        {/* Appel à l'action final */}
-        <section className="text-center bg-[#f3ede7] p-12 rounded-xl shadow-inner">
-          <h2 className="text-2xl font-bold mb-2 text-[#1b140d]">Envie d’un goûter maison ?</h2>
-          <p className="text-sm mb-4 text-[#9a734c]">Commandez dès maintenant et savourez nos créations artisanales.</p>
+      {/* About Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true }}
+        className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10 px-6 py-16 "
+      >
+        <div className="bg-white/70 rounded-xl p-6 w-full shadow-inner flex flex-col md:flex-row items-center gap-10">
+        <TiltedCard
+          imageSrc="/images/boulangerie.jpg"
+          altText="Notre Histoire"
+          captionText="Notre Histoire"
+          rotateAmplitude={12}
+          scaleOnHover={1.1}
+        />
+        <div className="md:w-1/2 space-y-4">
+          <h2 className="text-2xl font-bold text-[#1b140d]">Notre Histoire</h2>
+          <p className="text-base text-[#1b140d]">
+            Fondée en 2020, notre boulangerie vise à offrir à la communauté des produits frais et faits maison chaque jour.
+            Notre passion ? Le goût, l'authenticité, et le partage.
+          </p>
           <Link
-            href="/order"
-            className="bg-[#eb7f13] text-[#1b140d] font-semibold px-6 py-3 rounded-lg hover:bg-[#d67110] transition"
+            href="/our-story"
+            className="inline-block mt-2 text-[#eb7f13] font-medium hover:underline"
           >
-            Voir les produits
+            En savoir plus →
           </Link>
-        </section>
-      </main>
+        </div>
+        </div>
+      </motion.section>
+
+      {/* Call to Action */}
+      <motion.section
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7 }}
+        viewport={{ once: true }}
+        className="text-center bg-[#f3ede7] p-12 rounded-xl shadow-inner max-w-4xl mx-auto mb-16"
+      >
+        <h2 className="text-2xl font-bold mb-2 text-[#1b140d]">Envie d’un goûter maison ?</h2>
+        <p className="text-sm mb-4 text-[#9a734c]">
+          Commandez dès maintenant et savourez nos créations artisanales.
+        </p>
+        <Link
+          href="/order"
+          className="bg-[#eb7f13] text-white font-semibold px-6 py-3 rounded-lg hover:bg-[#d67110] transition"
+        >
+          Voir les produits
+        </Link>
+      </motion.section>
     </div>
   );
 }

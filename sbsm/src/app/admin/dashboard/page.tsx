@@ -33,6 +33,16 @@ type Order = {
   }[];
 };
 
+
+const PREDEFINED_CATEGORIES = [
+  "Pâtisserie",
+  "Viennoiserie",
+  "Sans gluten",
+  "Sans sucre",
+  "Vegan",
+  "Bio"
+];
+
 export default function DashboardPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
@@ -45,7 +55,9 @@ export default function DashboardPage() {
   const [restockValue, setRestockValue] = useState<{ [id: string]: number }>({});
   const [activeTab, setActiveTab] = useState<"products" | "add" | "orders" | "archived" | "history">("products");
   const [showArchived, setShowArchived] = useState(false); // Toggle for showing archived products
-
+  const [description, setDescription] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [newCategory, setNewCategory] = useState("");
 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +82,7 @@ export default function DashboardPage() {
     const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, price, quantity, image }),
+      body: JSON.stringify({ name, price, quantity, image, description, categories }),
     });
     if (res.ok) {
       const newProduct = await res.json();
@@ -214,6 +226,70 @@ export default function DashboardPage() {
           required
           className="w-full border p-2 rounded"
         />
+        <input
+          type="text"
+          placeholder="Description du produit"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          required
+          className="w-full border p-2 rounded"
+        />
+
+        <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Catégories
+        </label>
+
+        {/* Menu déroulant pour choisir une catégorie */}
+        <div className="flex gap-2">
+          <select
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg p-2 bg-white"
+          >
+            <option value=""> Choisir une catégorie </option>
+            {PREDEFINED_CATEGORIES.filter((cat) => !categories.includes(cat)).map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (newCategory && !categories.includes(newCategory)) {
+                setCategories([...categories, newCategory]);
+                setNewCategory("");
+              }
+            }}
+            className="bg-[#1c140d] text-white px-3 py-1 rounded"
+          >
+             Ajouter
+          </button>
+        </div>
+
+        {/* Affichage des catégories ajoutées */}
+        <div className="flex flex-wrap gap-2 mt-2">
+          {categories.map((cat) => (
+            <span
+              key={cat}
+              className="bg-[#f3ede7] text-[#1c140d] text-sm px-3 py-1 rounded-full flex items-center"
+            >
+              {cat}
+              <button
+                type="button"
+                onClick={() =>
+                  setCategories((prev) => prev.filter((c) => c !== cat))
+                }
+                className="ml-2 text-xs text-red-600 hover:text-red-800"
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+      </div>
 
         <div
           onDrop={handleDrop}
