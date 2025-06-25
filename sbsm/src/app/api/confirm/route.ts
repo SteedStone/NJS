@@ -13,7 +13,9 @@ export async function POST(req: Request) {
   const { sessionId } = await req.json();
 
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const session = await stripe.checkout.sessions.retrieve(sessionId, {
+    expand: ["line_items", "line_items.data.price.product"],
+  });
     const metadata = session.metadata;
 
     if (!metadata?.cart || !metadata.customerEmail || !metadata.customerName) {
@@ -26,6 +28,8 @@ export async function POST(req: Request) {
       data: {
         name: metadata.customerName,
         email: metadata.customerEmail,
+        phone: metadata.customerPhone || "",
+        bakery: metadata.customerBakery || "",
         items: {
           create: cart.map((item: any) => ({
             quantity: item.quantity,

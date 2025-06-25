@@ -16,7 +16,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const { name, price, quantity, image , description, categories } = await req.json();
+  const { name, price, quantity, image , description, categories , types } = await req.json();
 
   const newProduct = await prisma.product.create({
     data: {
@@ -26,6 +26,8 @@ export async function POST(req: Request) {
       image, // 👈 ajoute cette ligne
       description,
       categories,
+      types, // 👈 important
+
     },
   });
 
@@ -69,4 +71,24 @@ export async function PUT(req: Request) {
   });
 
   return NextResponse.json(updated);
+}
+
+
+export async function DELETE(req: Request) {
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+  }
+
+  try {
+    await prisma.product.delete({
+      where: { id },
+    });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Erreur lors de la suppression :", error);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }

@@ -11,18 +11,21 @@ export type Product = {
   quantity: number;
   image?: string;
   description?: string;
-  categories?: string[];
+  categories?: string[];  
+  types?: string[];
 };
 
 
 const PREDEFINED_CATEGORIES = [
   "Pâtisserie",
   "Viennoiserie",
+];
+const PREDEFINED_TYPES = [
   "Sans gluten",
   "Sans sucre",
   "Vegan",
   "Bio"
-];  
+];
 
 export default function OrderPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -176,11 +179,11 @@ export default function OrderPage() {
                   </p>
 
                   <div className="flex flex-wrap gap-1 mt-1">
-                    {product.categories?.map((cat, idx) => (
-                      <span key={idx} className="text-xs bg-[#f3ede7] text-[#1c140d] px-2 py-0.5 rounded-full">
-                        {cat}
-                      </span>
-                    ))}
+                    {product.types?.map((t, idx) => (
+                    <span key={idx} className="text-xs bg-[#f3ede7] text-[#1c140d] px-2 py-0.5 rounded-full">
+                      {t}
+                    </span>
+                  ))}
                   </div>
                   <p className="text-sm text-gray-600">
                     {isAvailable ? product.quantity : 0} disponibles 

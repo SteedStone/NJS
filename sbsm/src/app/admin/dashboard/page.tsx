@@ -20,6 +20,8 @@ type Order = {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  bakery?: string;
   createdAt: string;
   validated: boolean;
   items: {
@@ -34,9 +36,12 @@ type Order = {
 };
 
 
+
 const PREDEFINED_CATEGORIES = [
   "Pâtisserie",
   "Viennoiserie",
+];
+const PREDEFINED_TYPES = [
   "Sans gluten",
   "Sans sucre",
   "Vegan",
@@ -58,6 +63,12 @@ export default function DashboardPage() {
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
+  const [type, setType] = useState<string[]>([]);
+  const [newType, setNewType] = useState("");
+  const [bakeryFilter, setBakeryFilter] = useState<string | null>(null);
+
+
+
 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,7 +93,7 @@ export default function DashboardPage() {
     const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, price, quantity, image, description, categories }),
+      body: JSON.stringify({ name, price, quantity, image, description, categories , types: type}),
     });
     if (res.ok) {
       const newProduct = await res.json();
@@ -290,6 +301,50 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
+      <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">Types (ex: Sans gluten, Vegan...)</label>
+      <div className="flex gap-2">
+        <select
+          value={newType}
+          onChange={(e) => setNewType(e.target.value)}
+          className="w-full border border-gray-300 rounded-lg p-2 bg-white"
+        >
+          <option value="">Choisir un type</option>
+          {PREDEFINED_TYPES.filter(t => !type.includes(t)).map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => {
+            if (newType && !type.includes(newType)) {
+              setType([...type, newType]);
+              setNewType("");
+            }
+          }}
+          className="bg-[#1c140d] text-white px-3 py-1 rounded"
+        >
+          Ajouter
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2 mt-2">
+        {type.map((t) => (
+          <span
+            key={t}
+            className="bg-[#f3ede7] text-[#1c140d] text-sm px-3 py-1 rounded-full flex items-center"
+          >
+            {t}
+            <button
+              type="button"
+              onClick={() => setType(prev => prev.filter(x => x !== t))}
+              className="ml-2 text-xs text-red-600 hover:text-red-800"
+            >
+              ✕
+            </button>
+          </span>
+        ))}
+      </div>
+    </div>
 
         <div
           onDrop={handleDrop}
@@ -322,12 +377,28 @@ export default function DashboardPage() {
       {activeTab === "orders" && (
         <ul className="space-y-2">
           {orders.length === 0 && <p>Aucune commande trouvée.</p>}
-          {orders.filter(order => !order.validated).map(order => (
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Filtrer par boulangerie :</label>
+            <select
+              onChange={(e) => setBakeryFilter(e.target.value || null)}
+              value={bakeryFilter || ""}
+              className="border p-2 rounded w-full max-w-xs"
+            >
+              <option value="">Toutes les boulangeries</option>
+              {[...new Set(orders.map(o => o.bakery).filter(Boolean))].map((bakery, i) => (
+                <option key={i} value={bakery}>{bakery}</option>
+              ))}
+            </select>
+          </div>
+
+          {orders.filter(order => !order.validated && (!bakeryFilter || order.bakery === bakeryFilter)).map(order => (
 
             <li key={order.id} className="p-4 border rounded bg-white shadow">
               <p className="font-bold">Commande #{order.id}</p>
               <p>Client : {order.name} ({order.email})</p>
               <p>Date : {new Date(order.createdAt).toLocaleString()}</p>
+              <p>Téléphone : {order.phone || "Non renseigné"}</p>
+              <p>Boulangerie : {order.bakery || "Non renseignée"}</p>
               <ul className="ml-4 list-disc">
                 {order.items.map((item) => (
                   <li key={item.id}>
@@ -392,6 +463,7 @@ export default function DashboardPage() {
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ id: product.id, quantityToAdd }),
                 });
+                
 
                 if (res.ok) {
                   const updated = await res.json();
@@ -424,6 +496,25 @@ export default function DashboardPage() {
               className="bg-red-600 text-white px-3 py-1 rounded text-sm"
             >
               Archiver
+            </button>
+            <button
+              onClick={async () => {
+                const confirmDelete = confirm("Supprimer ce produit définitivement ?");
+                if (!confirmDelete) return;
+
+                const res = await fetch(`/api/products?id=${product.id}`, {
+                  method: "DELETE",
+                });
+
+                if (res.ok) {
+                  setProducts(prev => prev.filter(p => p.id !== product.id));
+                } else {
+                  alert("Erreur lors de la suppression.");
+                }
+              }}
+              className="bg-red-800 text-white px-3 py-1 rounded text-sm"
+            >
+              🗑 Supprimer
             </button>
           </div>
         </li>
@@ -466,12 +557,14 @@ export default function DashboardPage() {
 
       {activeTab === "history" && (
         <ul className="space-y-2">
-          {orders.filter(order => order.validated).map(order => (
+          {orders.filter(order => order.validated && (!bakeryFilter || order.bakery === bakeryFilter)).map(order => (
             <li key={order.id} className="p-4 border rounded bg-white shadow flex justify-between items-start">
               <div>
                 <p className="font-bold">Commande #{order.id}</p>
                 <p>Client : {order.name} ({order.email})</p>
                 <p>Date : {new Date(order.createdAt).toLocaleString()}</p>
+                <p>Téléphone : {order.phone || "Non renseigné"}</p>
+                <p>Boulangerie : {order.bakery || "Non renseignée"}</p>
                 <ul className="ml-4 list-disc">
                   {order.items.map((item) => (
                     <li key={item.id}>

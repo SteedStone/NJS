@@ -84,6 +84,7 @@ model Product {
   image String? // 👈 optionnel
   description String?  // 🆕 Description visible côté client
   categories  String[] // 🆕 Liste de catégories (ex: ["Pâtisserie", "Sans gluten"])
+  types String[]
 
 }
 
@@ -94,6 +95,8 @@ model Order {
   name      String
   email     String
   validated Boolean    @default(false) // ✅ Permet de filtrer les commandes validées
+  phone     String?   // ✅ Nouveau champ
+  bakery    String?   // ✅ Nouveau champ
 
 }
 
