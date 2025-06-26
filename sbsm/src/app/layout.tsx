@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="#">Contact</Link>
               <Link href="/confidentialite">Confidentialité</Link>
               <Link href="/cgu">Conditions Générales d'Utilisation</Link>
-              <Link href="/admin/login">admin</Link>
+              <Link href="/admin/login">Admin</Link>
 
             </div>
             <p className="text-[#9a734c] text-sm">
