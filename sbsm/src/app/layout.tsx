@@ -37,9 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           <footer className="text-center border-t border-[#f3ede7] py-6 bg-[#fcfaf8] mt-10">
             <div className="flex flex-wrap justify-center gap-6 text-sm text-[#9a734c] mb-4">
-              <Link href="#">Contact</Link>
-              <Link href="#">Confidentialité</Link>
-              <Link href="#">Conditions d'utilisation</Link>
+              <Link href="/contact">Contact</Link>
+              <Link href="/confidentialite">Confidentialité</Link>
+              <Link href="/cgu">Conditions Générales d'Utilisation</Link>
               <Link href="/admin/login">Admin</Link>
 
             </div>

@@ -75,28 +75,31 @@ export default function HomePage() {
               img: "/images/pain3.jpg",
               title: "Pains au levain",
               desc: "Cuits à la perfection, avec une croûte dorée et une mie aérée.",
+              link: "/order?cat=Pâtisserie",
             },
             {
               img: "/images/pain2.jpg",
               title: "Viennoiseries",
               desc: "Croissants, pains au chocolat, brioches moelleuses… tous faits maison.",
+              link: "/order?cat=Viennoiserie",
             },
             {
               img: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80",
               title: "Gâteaux personnalisés",
               desc: "Pour toutes les occasions, réalisés avec soin et créativité.",
+              link: "/order/gateaux",
               
             },
           ].map((item, i) => (
-            <TiltedCard
-              key={i}
-              imageSrc={item.img}
-              altText={item.title}
-              captionText={item.title}
-              rotateAmplitude={12}
-              scaleOnHover={1.1}
-              
-            />
+            <Link href={item.link} key={i} className="block">
+              <TiltedCard
+                imageSrc={item.img}
+                altText={item.title}
+                captionText={item.title}
+                rotateAmplitude={12}
+                scaleOnHover={1.1}
+              />
+            </Link>
           ))}
         </div>
       </div>
@@ -111,14 +114,16 @@ export default function HomePage() {
         className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10 px-6 py-16 "
       >
         <div className="bg-white/70 rounded-xl p-6 w-full shadow-inner flex flex-col md:flex-row items-center gap-10">
-        <TiltedCard
-          imageSrc="/images/boulangerie.jpg"
-          altText="Notre Histoire"
-          captionText="Notre Histoire"
-          rotateAmplitude={12}
-          scaleOnHover={1.1}
+        <Link href = "/our-story">
+          <TiltedCard
+            imageSrc="/images/boulangerie.jpg"
+            altText="Notre Histoire"
+            captionText="Notre Histoire"
+            rotateAmplitude={12}
+            scaleOnHover={1.1}
 
-        />
+          />
+        </Link>
         <div className="md:w-1/2 space-y-4">
           <h2 className="text-2xl font-bold text-[#1b140d]">Notre Histoire</h2>
           <p className="text-base text-[#1b140d]">
