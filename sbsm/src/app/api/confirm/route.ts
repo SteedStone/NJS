@@ -60,15 +60,29 @@ export async function POST(req: Request) {
       to: metadata.customerEmail,
       subject: "Confirmation de votre commande",
       html: `
-        <p>Bonjour ${metadata.customerName},</p>
-        <p>Merci pour votre commande ! Voici un récapitulatif :</p>
-        <ul>
-          ${cart.map((item: any) => `<li>${item.quantity} × ${item.name} — ${item.price.toFixed(2)} €</li>`).join("")}
-        </ul>
-        <p>Total : ${cart.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0).toFixed(2)} €</p>
-        <p>Votre code de retrait est : <strong>${pin}</strong></p>
-        <p>Veuillez le montrer au moment du retrait.</p>
-        <p>À bientôt !</p>
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #1c140d;">Bonjour ${metadata.customerName},</h2>
+          <p>Merci pour votre commande à la boulangerie <strong>${metadata.customerBakery || ""}</strong> !</p>
+
+          <h3 style="margin-top: 20px;">🧺 Récapitulatif de votre commande :</h3>
+          <ul style="list-style: none; padding: 0;">
+            ${cart.map((item: any) => `
+              <li style="padding: 4px 0;">
+                ${item.quantity} × <strong>${item.name}</strong> — ${item.price.toFixed(2)} €
+              </li>
+            `).join("")}
+          </ul>
+
+          <p style="margin-top: 10px;"><strong>Total : ${cart.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0).toFixed(2)} €</strong></p>
+
+          <div style="margin: 20px 0; padding: 10px; background-color: #f3ede7; border-radius: 8px;">
+            <p style="font-size: 18px; margin: 0;">🎟️ <strong>Code de retrait : <span style="color: #1c140d;">${pin}</span></strong></p>
+          </div>
+
+          <p>Veuillez présenter ce code à la boulangerie au moment du retrait.</p>
+          <p>À très bientôt,</p>
+          <p style="color: #999; font-size: 12px;">Cet email a été généré automatiquement. Ne pas répondre.</p>
+        </div>
       `,
     });
 

@@ -401,6 +401,7 @@ export default function DashboardPage() {
               <p>Date : {new Date(order.createdAt).toLocaleString()}</p>
               <p>Téléphone : {order.phone || "Non renseigné"}</p>
               <p>Boulangerie : {order.bakery || "Non renseignée"}</p>
+              <p>🔐 Code de retrait : <strong>{order.pin}</strong></p>
               <ul className="ml-4 list-disc">
                 {order.items.map((item) => (
                   <li key={item.id}>
@@ -408,20 +409,7 @@ export default function DashboardPage() {
                   </li>
                 ))}
               </ul>
-              <input
-              type="text"
-              placeholder="Code PIN du client"
-              value={order.pin || ""}
-              onChange={(e) => {
-                const newPin = e.target.value;
-                setOrders((prev) =>
-                  prev.map((o) =>
-                    o.id === order.id ? { ...o, inputPin: newPin } : o
-                  )
-                );
-              }}
-              className="mt-2 border px-2 py-1 rounded text-sm w-full"
-/>
+              
               <button
                 onClick={() => handleValidateOrder(order.id, order.pin || "")}
                 className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm"
