@@ -24,6 +24,7 @@ type Order = {
   bakery?: string;
   createdAt: string;
   validated: boolean;
+  pin?: string; // Code PIN pour la commande
   items: {
     id: string;
     quantity: number;
@@ -127,11 +128,11 @@ export default function DashboardPage() {
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
-  const handleValidateOrder = async (orderId: string) => {
+  const handleValidateOrder = async (orderId: string, pin: string) => {
     const res = await fetch("/api/order/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId }),
+      body: JSON.stringify({ orderId, pin }),
     });
 
     if (res.ok) {
@@ -141,9 +142,10 @@ export default function DashboardPage() {
         )
       );
     } else {
-      alert("Échec de l'archivage de la commande.");
+      alert("Échec de la validation : code PIN incorrect.");
     }
   };
+
 
 
   return (
@@ -406,8 +408,22 @@ export default function DashboardPage() {
                   </li>
                 ))}
               </ul>
+              <input
+              type="text"
+              placeholder="Code PIN du client"
+              value={order.pin || ""}
+              onChange={(e) => {
+                const newPin = e.target.value;
+                setOrders((prev) =>
+                  prev.map((o) =>
+                    o.id === order.id ? { ...o, inputPin: newPin } : o
+                  )
+                );
+              }}
+              className="mt-2 border px-2 py-1 rounded text-sm w-full"
+/>
               <button
-                onClick={() => handleValidateOrder(order.id)}
+                onClick={() => handleValidateOrder(order.id, order.pin || "")}
                 className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm"
               >
                 ✔ Valider

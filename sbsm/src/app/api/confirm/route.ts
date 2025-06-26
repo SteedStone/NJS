@@ -20,8 +20,12 @@ export async function POST(req: Request) {
     if (!metadata?.cart || !metadata.customerEmail || !metadata.customerName) {
       return NextResponse.json({ error: "Données manquantes." }, { status: 400 });
     }
+    function generatePIN() {
+      return Math.floor(1000 + Math.random() * 9000).toString(); // exemple : "4831"
+    }
 
     const cart = JSON.parse(metadata.cart);
+    const pin = generatePIN();
 
     const order = await prisma.order.create({
       data: {
@@ -35,6 +39,8 @@ export async function POST(req: Request) {
             product: { connect: { id: item.productId } },
           })),
         },
+        pin : pin, // ← nouveau champ ici
+
       },
       include: { items: true },
     });
@@ -60,6 +66,8 @@ export async function POST(req: Request) {
           ${cart.map((item: any) => `<li>${item.quantity} × ${item.name} — ${item.price.toFixed(2)} €</li>`).join("")}
         </ul>
         <p>Total : ${cart.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0).toFixed(2)} €</p>
+        <p>Votre code de retrait est : <strong>${pin}</strong></p>
+        <p>Veuillez le montrer au moment du retrait.</p>
         <p>À bientôt !</p>
       `,
     });

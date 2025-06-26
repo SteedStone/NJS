@@ -97,7 +97,7 @@ model Order {
   validated Boolean    @default(false) // ✅ Permet de filtrer les commandes validées
   phone     String?   // ✅ Nouveau champ
   bakery    String?   // ✅ Nouveau champ
-
+  pin       String?
 }
 
 model OrderItem {

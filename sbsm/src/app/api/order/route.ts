@@ -12,6 +12,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
 
+  
+  
+
   try {
     const order = await prisma.order.create({
       data: {
@@ -22,6 +25,7 @@ export async function POST(req: NextRequest) {
             product: { connect: { id: item.productId } },
             quantity: item.quantity,
           })),
+
         },
       },
       include: {
