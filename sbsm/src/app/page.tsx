@@ -72,22 +72,22 @@ export default function HomePage() {
         <div className="grid md:grid-cols-3 gap-10">
           {[
             {
-              img: "/images/pain3.jpg",
-              title: "Pains au levain",
+              img: "/images/Patisserie.jpg",
+              title: "Pâtisserie",
               desc: "Cuits à la perfection, avec une croûte dorée et une mie aérée.",
               link: "/order?cat=Pâtisserie",
             },
             {
-              img: "/images/pain2.jpg",
+              img: "/images/Viennoiserie.jpg",
               title: "Viennoiseries",
               desc: "Croissants, pains au chocolat, brioches moelleuses… tous faits maison.",
               link: "/order?cat=Viennoiserie",
             },
             {
-              img: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80",
-              title: "Gâteaux personnalisés",
+              img: "images/pain2.jpg",
+              title: "Boulangerie",
               desc: "Pour toutes les occasions, réalisés avec soin et créativité.",
-              link: "/order/gateaux",
+              link: "/order?cat=Boulangerie",
               
             },
           ].map((item, i) => (

@@ -37,16 +37,17 @@ type Order = {
 };
 
 
-
 const PREDEFINED_CATEGORIES = [
   "Pâtisserie",
   "Viennoiserie",
+  "Boulangerie",
 ];
 const PREDEFINED_TYPES = [
   "Sans gluten",
   "Sans sucre",
   "Vegan",
-  "Bio"
+  "Bio",
+  "Complet"
 ];
 
 export default function DashboardPage() {

@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </Link>
               </div>
               <nav className="flex items-center gap-6 text-sm font-medium text-[#1b140d]">
-                <Link href="/">Acceuil</Link>
+                <Link href="/">Accueil</Link>
                 <Link href="/localisations">Nos boulangeries</Link>
                 <Link href="/our-story">À propos</Link>
                 <CartDropdown />
