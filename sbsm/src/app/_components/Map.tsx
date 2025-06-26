@@ -9,8 +9,6 @@ import shadowUrl from "leaflet/dist/images/marker-shadow.png";
 
 // Icône personnalisée
 const customIcon = new L.Icon({
-  iconUrl,
-  shadowUrl,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
