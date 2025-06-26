@@ -1,6 +1,6 @@
 "use client";
-import { createContext, useContext, useState, ReactNode, useCallback } from "react";
-
+import { createContext, useContext, useState, useCallback } from "react";
+import type { ReactNode } from "react";
 export type CartItem = {
   id: string;
   name: string;
