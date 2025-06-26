@@ -98,6 +98,7 @@ model Order {
   phone     String?   // ✅ Nouveau champ
   bakery    String?   // ✅ Nouveau champ
   pin       String?
+  time      String?
 }
 
 model OrderItem {

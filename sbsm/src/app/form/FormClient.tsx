@@ -18,6 +18,23 @@ type Product = {
   quantity: number;
 };
 
+const timeperiod = [
+  "Aucun horaire",
+  "08:00 - 09:00",
+  "09:00 - 10:00",
+  "10:00 - 11:00",
+  "11:00 - 12:00",
+  "12:00 - 13:00",
+  "13:00 - 14:00",
+  "14:00 - 15:00",
+  "15:00 - 16:00",
+  "16:00 - 17:00",
+  "17:00 - 18:00",
+  "18:00 - 19:00",
+  "19:00 - 20:00",
+  "20:00 - 21:00",
+];
+
 const bakeries = [
   { id: "1", name: "Boulangerie Centrale", lat: 48.8566, lng: 2.3522 },
   { id: "2", name: "Pain d’Or", lat: 48.864716, lng: 2.349014 },
@@ -45,6 +62,7 @@ export default function FormClient() {
   const [products, setProducts] = useState<Product[]>([]);
   const [phone, setPhone] = useState("");
   const [selectedBakery, setSelectedBakery] = useState("");
+  const [time, setTime] = useState("");
 
   useEffect(() => {
     const cartParam = searchParams.get("cart");
@@ -92,7 +110,7 @@ export default function FormClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cart: enrichedCart,
-          customer: { name, email, phone, bakery: selectedBakery },
+          customer: { name, email, phone, bakery: selectedBakery, time: time },
         }),
       });
 
@@ -183,6 +201,22 @@ export default function FormClient() {
           {bakeries.map((b) => (
             <option key={b.id} value={b.name}>
               {b.name}
+            </option>
+          ))}
+        </select>
+        <h4 className="text-lg font-semibold mb-2">
+          Choisissez l'horaire de passage (Par défaut : Aucun horaire) :
+        </h4>
+        <select
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          required
+          className="w-full border p-2 rounded"
+        >
+          <option value="">Choisissez un horaire de passage</option>
+          {timeperiod.map((period, index) => (
+            <option key={index} value={period}>
+              {period}
             </option>
           ))}
         </select>

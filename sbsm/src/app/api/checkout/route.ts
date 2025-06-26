@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { cart, customer } = body;
 
-    if (!cart || !customer?.email || !customer?.name || !customer?.phone || !customer?.bakery) {
+    if (!cart || !customer?.email || !customer?.name || !customer?.phone || !customer?.bakery || !customer?.time) {
       return NextResponse.json({ error: "Champs manquants" }, { status: 400 });
     }
 
@@ -40,6 +40,7 @@ export async function POST(req: Request) {
         customerName: customer.name,
         customerPhone: customer.phone || "",        // ✅ ajouté
         customerBakery: customer.bakery || "", 
+        customerTime: customer.time || "", // ✅ ajouté
         cart: JSON.stringify(cart),
       },
     });

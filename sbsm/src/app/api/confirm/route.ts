@@ -33,6 +33,7 @@ export async function POST(req: Request) {
         email: metadata.customerEmail,
         phone: metadata.customerPhone || "",
         bakery: metadata.customerBakery || "",
+        time: metadata.customerTime || "", // nouveau champ
         items: {
           create: cart.map((item: any) => ({
             quantity: item.quantity,

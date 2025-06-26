@@ -25,6 +25,7 @@ type Order = {
   createdAt: string;
   validated: boolean;
   pin?: string; // Code PIN pour la commande
+  time?: string; // Heure de la commande
   items: {
     id: string;
     quantity: number;
@@ -402,6 +403,7 @@ export default function DashboardPage() {
               <p>Date : {new Date(order.createdAt).toLocaleString()}</p>
               <p>Téléphone : {order.phone || "Non renseigné"}</p>
               <p>Boulangerie : {order.bakery || "Non renseignée"}</p>
+              {order.time && <p>Heure : {new Date(order.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>}
               <p>🔐 Code de retrait : <strong>{order.pin}</strong></p>
               <ul className="ml-4 list-disc">
                 {order.items.map((item) => (
