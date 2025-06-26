@@ -110,7 +110,7 @@ export default function FormClient() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cart: enrichedCart,
-          customer: { name, email, phone, bakery: selectedBakery, time: time },
+          customer: { name, email : email, phone, bakery: selectedBakery, time: time },
         }),
       });
 
