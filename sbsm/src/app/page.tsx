@@ -94,7 +94,6 @@ export default function HomePage() {
               captionText={item.title}
               rotateAmplitude={12}
               scaleOnHover={1.1}
-              overlayText={item.desc}
             />
           ))}
         </div>
