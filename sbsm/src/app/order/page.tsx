@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { motion } from "framer-motion";
-import { useSearchParams } from "next/navigation";
 
 
 export type Product = {
@@ -35,14 +34,16 @@ export default function OrderPage() {
   const { cart, addToCart, removeFromCart } = useCart();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const searchParams = useSearchParams();
 
   useEffect(() => {
-    const categoryFromURL = searchParams.get("cat");
-    if (categoryFromURL && PREDEFINED_CATEGORIES.includes(categoryFromURL)) {
-      setSelectedCategories([categoryFromURL]);
+  if (typeof window !== "undefined") {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get("cat");
+    if (cat && PREDEFINED_CATEGORIES.includes(cat)) {
+      setSelectedCategories([cat]);
     }
-  }, [searchParams]);
+  }
+}, []);
 
   useEffect(() => {
     fetch("/api/products")
