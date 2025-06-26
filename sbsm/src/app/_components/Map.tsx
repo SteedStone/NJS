@@ -4,11 +4,13 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState } from "react";
-import iconUrl from "leaflet/dist/images/marker-icon.png";
-import shadowUrl from "leaflet/dist/images/marker-shadow.png";
+const iconUrl = require("leaflet/dist/images/marker-icon.png");
+const shadowUrl = require("leaflet/dist/images/marker-shadow.png");
 
 // Icône personnalisée
 const customIcon = new L.Icon({
+  iconUrl: iconUrl,
+  shadowUrl: shadowUrl,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
 });
