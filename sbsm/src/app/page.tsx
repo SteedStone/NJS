@@ -85,6 +85,7 @@ export default function HomePage() {
               img: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80",
               title: "Gâteaux personnalisés",
               desc: "Pour toutes les occasions, réalisés avec soin et créativité.",
+              
             },
           ].map((item, i) => (
             <TiltedCard
@@ -94,6 +95,7 @@ export default function HomePage() {
               captionText={item.title}
               rotateAmplitude={12}
               scaleOnHover={1.1}
+              
             />
           ))}
         </div>
@@ -115,6 +117,7 @@ export default function HomePage() {
           captionText="Notre Histoire"
           rotateAmplitude={12}
           scaleOnHover={1.1}
+
         />
         <div className="md:w-1/2 space-y-4">
           <h2 className="text-2xl font-bold text-[#1b140d]">Notre Histoire</h2>
