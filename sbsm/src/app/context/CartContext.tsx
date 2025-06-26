@@ -24,6 +24,8 @@ type CartContextType = {
   removeFromCart: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   getTotalItems: () => number;
+  getTotalPrice: () => number; // ⬅️ AJOUTE CETTE LIGNE
+
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
