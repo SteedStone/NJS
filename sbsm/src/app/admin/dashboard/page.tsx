@@ -505,7 +505,7 @@ export default function DashboardPage() {
                 .filter(order => !order.validated && (!bakeryFilter || order.bakery === bakeryFilter))
                 .map((order, index) => (
                   <li key={order.id} className="p-4 border rounded bg-white shadow">
-                    <p className="font-bold">Commande #{(index + 1) % 99 || 1}</p>
+                    <p className="font-bold">Commande #{order.id}</p>
                     <p>Client : {order.name} ({order.email})</p>
                     <p>Date : {new Date(order.createdAt).toLocaleString()}</p>
                     <p>Téléphone : {order.phone || "Non renseigné"}</p>
