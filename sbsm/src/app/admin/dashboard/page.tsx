@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import jsPDF from "jspdf";
+
 
 // ⚠️ Ce composant suppose que l'accès est maintenant protégé côté serveur via un cookie + middleware
 // Plus besoin de vérifier ici localStorage car la redirection se fait côté serveur.
@@ -77,19 +79,82 @@ export default function DashboardPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-  fetch("/api/products?includeArchived=true")
-    .then(res => res.json())
-    .then(data => setProducts(data));
-}, []);
+    fetch("/api/products?includeArchived=true")
+      .then(res => res.json())
+      .then(data => setProducts(data));
+  }, []);
   useEffect(() => {
-  fetch("/api/order")
-    .then((res) => res.json())
-    .then((data) => {
-      setOrders(data);
-    })
-    .catch((err) => {
+    fetch("/api/order")
+      .then((res) => res.json())
+      .then((data) => {
+        setOrders(data);
+      })
+      .catch((err) => {
+      });
+  }, []);
+  const generateAllOrdersPdf = () => {
+    const doc = new jsPDF();
+    const margin = 10;
+    const pageHeight = doc.internal.pageSize.height;
+    let y = margin;
+
+    const filteredOrders = orders.filter(
+      (order) => !order.validated && (!bakeryFilter || order.bakery === bakeryFilter)
+    );
+
+    if (filteredOrders.length === 0) {
+      alert("Aucune commande à exporter.");
+      return;
+    }
+
+    filteredOrders.forEach((order, idx) => {
+      // Hauteur de départ du cadre
+      const boxTop = y;
+
+      // Titre encadré
+      doc.setFillColor(240, 240, 240);
+      doc.rect(margin, y, 190, 10, 'F');
+      doc.setFontSize(14);
+      doc.setTextColor(40, 40, 40);
+      doc.text(`Commande #${order.id}`, margin + 2, y + 7);
+      y += 14;
+
+      doc.setFontSize(11);
+      doc.setTextColor(50, 50, 50);
+      doc.text(`Client : ${order.name} (${order.email})`, margin + 2, y); y += 6;
+      doc.text(`Téléphone : ${order.phone || "Non renseigné"}`, margin + 2, y); y += 6;
+      doc.text(`Boulangerie : ${order.bakery || "Non renseignée"}`, margin + 2, y); y += 6;
+      doc.text(`Date : ${new Date(order.createdAt).toLocaleString()}`, margin + 2, y); y += 6;
+      doc.text(`Heure de retrait : ${order.time || "Non renseigné"}`, margin + 2, y); y += 6;
+      doc.text(`Code PIN : ${order.pin}`, margin + 2, y); y += 8;
+
+      doc.setFont( "bold");
+      doc.text("Produits :", margin + 2, y); y += 6;
+      doc.setFont("normal");
+
+      order.items.forEach((item) => {
+        doc.text(`• ${item.product.name} x${item.quantity}`, margin + 10, y);
+        y += 5;
+      });
+
+      y += 6;
+
+      // Encadré visuel
+      const boxHeight = y - boxTop;
+      doc.setDrawColor(200);
+      doc.rect(margin, boxTop, 190, boxHeight);
+
+      // Nouvelle page si on est en bas
+      if (y + 30 > pageHeight && idx !== filteredOrders.length - 1) {
+        doc.addPage();
+        y = margin;
+      }
     });
-}, []);
+
+    doc.save("commandes.pdf");
+  };
+
+
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -394,32 +459,45 @@ export default function DashboardPage() {
               ))}
             </select>
           </div>
+          <button
+            onClick={generateAllOrdersPdf}
+            className="bg-[#1c140d] text-white px-4 py-2 rounded shadow"
+          >
+            🧾 Exporter toutes les commandes en PDF
+          </button>
 
           {orders.filter(order => !order.validated && (!bakeryFilter || order.bakery === bakeryFilter)).map(order => (
 
-            <li key={order.id} className="p-4 border rounded bg-white shadow">
-              <p className="font-bold">Commande #{order.id}</p>
-              <p>Client : {order.name} ({order.email})</p>
-              <p>Date : {new Date(order.createdAt).toLocaleString()}</p>
-              <p>Téléphone : {order.phone || "Non renseigné"}</p>
-              <p>Boulangerie : {order.bakery || "Non renseignée"}</p>
-              <p>Heure de passage : {order.time || "Non renseigné"}</p>
-              <p>🔐 Code de retrait : <strong>{order.pin}</strong></p>
-              <ul className="ml-4 list-disc">
-                {order.items.map((item) => (
-                  <li key={item.id}>
-                    {item.product.name} — {item.quantity}
-                  </li>
-                ))}
-              </ul>
-              
-              <button
-                onClick={() => handleValidateOrder(order.id, order.pin || "")}
-                className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm"
-              >
-                ✔ Valider
-              </button>
-            </li>
+            <li key={order.id} className="p-4 border rounded-lg bg-white shadow space-y-2">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-[#1c140d]">Commande #{order.id}</h3>
+              <span className="text-sm text-gray-600">{new Date(order.createdAt).toLocaleString()}</span>
+            </div>
+
+            <div className="text-sm text-gray-700">
+              <p><strong>Client :</strong> {order.name} ({order.email})</p>
+              <p><strong>Téléphone :</strong> {order.phone || "Non renseigné"}</p>
+              <p><strong>Boulangerie :</strong> {order.bakery || "Non renseignée"}</p>
+              <p><strong>Heure de passage :</strong> {order.time || "Non renseigné"}</p>
+              <p><strong>🔐 Code de retrait :</strong> {order.pin}</p>
+            </div>
+
+            <ul className="pl-4 list-disc text-sm text-gray-800">
+              {order.items.map((item) => (
+                <li key={item.id}>
+                  {item.product.name} — {item.quantity}
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={() => handleValidateOrder(order.id, order.pin || "")}
+              className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2"
+            >
+              ✔ Valider la commande
+            </button>
+          </li>
+
             
             
           ))}
