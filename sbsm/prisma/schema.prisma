@@ -99,7 +99,7 @@ model Order {
   bakery    String?   // ✅ Nouveau champ
   pin       String?
   time      String?
-  status    String?   
+  status    String?   @default("pending")
 }
 
 model OrderItem {
