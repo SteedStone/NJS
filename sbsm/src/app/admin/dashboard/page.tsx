@@ -197,11 +197,11 @@ export default function DashboardPage() {
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   };
-  const handleValidateOrder = async (orderId: string, pin: string) => {
+  const handleValidateOrder = async (orderId: string) => {
     const res = await fetch("/api/order/validate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId, pin }),
+      body: JSON.stringify({ orderId, validated: true }),
     });
 
     if (res.ok) {
@@ -214,28 +214,35 @@ export default function DashboardPage() {
       alert("Échec de la validation : code PIN incorrect.");
     }
   };
-  const handleUpdateStatus = (orderId: string, newStatus: "pending" | "ready" | "picked_up") => {
-    setOrders(prev =>
-      prev.map(order =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
+  const updateOrderStatus = async (orderId: string, status: "pending" | "ready" | "picked_up") => {
+    const res = await fetch("/api/order/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, status }),
+    });
+
+    if (res.ok) {
+      setOrders(prev =>
+        prev.map(order =>
+          order.id === orderId ? { ...order, status } : order
+        )
+      );
+    } else {
+      alert("Échec de la mise à jour du statut.");
+    }
   };
-  const handleMarkReady = (id: string) => {
-    setOrders((prev) =>
-      prev.map(order =>
-        order.id === id ? { ...order, status: "ready" } : order
-      )
-    );
+  const getNextStatus = (current: "pending" | "ready" | "picked_up" | undefined): "pending" | "ready" | "picked_up" => {
+    switch (current) {
+      case "pending":
+        return "ready";
+      case "ready":
+        return "picked_up";
+      case "picked_up":
+      default:
+        return "pending";
+    }
   };
   
-  const handleMarkPickedUp = (id: string) => {
-    setOrders((prev) =>
-      prev.map(order =>
-        order.id === id ? { ...order, status: "picked_up" } : order
-      )
-    );
-  };
   
 
 
@@ -513,27 +520,27 @@ export default function DashboardPage() {
                       ))}
                     </ul>
 
-                    {order.status ==="pending" && (
-                      <button
-                        onClick={() => handleUpdateStatus(order.id, "ready")}
-                        className="mt-2 bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition-colors"
-                      >
-                        🚧 Marquer comme prête
-                      </button>
-                    )}
-
-                    {order.status === "ready" && (
-                      <button
-                        onClick={() => handleMarkPickedUp(order.id)}
-                        className="mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors"
-                      >
-                        ✅ Marquer comme emportée
-                      </button>
-                    )}
-
-                    {order.status === "picked_up"  && (
-                      <p className="mt-2 text-sm text-green-700 font-semibold">Commande emportée ✔</p>
-                    )}
+                    <button
+                      onClick={() => {
+                        const next = getNextStatus(order.status);
+                        updateOrderStatus(order.id, next);
+                      }}
+                      className={`mt-2 px-3 py-1 rounded text-sm font-medium
+                        ${order.status === "pending" ? "bg-red-500 text-white" : ""}
+                        ${order.status === "ready" ? "bg-orange-400 text-white" : ""}
+                        ${order.status === "picked_up" ? "bg-green-600 text-white" : ""}
+                      `}
+                    >
+                      {order.status === "pending" && "⏳ En attente"}
+                      {order.status === "ready" && "🚧 Prête"}
+                      {order.status === "picked_up" && "✅ Emportée"}
+                    </button>
+                    <button
+                      onClick={() => handleValidateOrder(order.id)}
+                      className="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                    >
+                      ✔ Valider
+                    </button>
                   </li>
                 ))}
             </ul>

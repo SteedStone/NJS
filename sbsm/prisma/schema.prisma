@@ -99,6 +99,7 @@ model Order {
   bakery    String?   // ✅ Nouveau champ
   pin       String?
   time      String?
+  status    String?   
 }
 
 model OrderItem {
