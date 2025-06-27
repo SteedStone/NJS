@@ -4,8 +4,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useState } from "react";
-const iconUrl = require("leaflet/dist/images/marker-icon.png");
-const shadowUrl = require("leaflet/dist/images/marker-shadow.png");
+const iconUrl = "images/marker-icon.png"; // Chemin vers l'icône personnalisée
+const shadowUrl = "images/marker-shadow.png"; // Chemin vers l'ombre de l'icône
 
 // Icône personnalisée
 const customIcon = new L.Icon({
