@@ -28,6 +28,7 @@ type Order = {
   validated: boolean;
   pin?: string; // Code PIN pour la commande
   time?: string; // Heure de la commande
+  status?: "pending" | "ready" | "picked_up";
   items: {
     id: string;
     quantity: number;
@@ -75,6 +76,7 @@ export default function DashboardPage() {
 
 
 
+  const [orderStatuses, setOrderStatuses] = useState<{ [orderId: string]: "pending" | "ready" | "picked" }>({});
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -212,6 +214,29 @@ export default function DashboardPage() {
       alert("Échec de la validation : code PIN incorrect.");
     }
   };
+  const handleUpdateStatus = (orderId: string, newStatus: "pending" | "ready" | "picked_up") => {
+    setOrders(prev =>
+      prev.map(order =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+  };
+  const handleMarkReady = (id: string) => {
+    setOrders((prev) =>
+      prev.map(order =>
+        order.id === id ? { ...order, status: "ready" } : order
+      )
+    );
+  };
+  
+  const handleMarkPickedUp = (id: string) => {
+    setOrders((prev) =>
+      prev.map(order =>
+        order.id === id ? { ...order, status: "picked_up" } : order
+      )
+    );
+  };
+  
 
 
 
@@ -444,8 +469,7 @@ export default function DashboardPage() {
       </form>
       )}
       {activeTab === "orders" && (
-        <ul className="space-y-2">
-          {orders.length === 0 && <p>Aucune commande trouvée.</p>}
+        <>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Filtrer par boulangerie :</label>
             <select
@@ -466,43 +490,57 @@ export default function DashboardPage() {
             🧾 Exporter toutes les commandes en PDF
           </button>
 
-          {orders.filter(order => !order.validated && (!bakeryFilter || order.bakery === bakeryFilter)).map(order => (
+          {orders.filter(order => !order.validated && (!bakeryFilter || order.bakery === bakeryFilter)).length === 0 ? (
+            <div className="text-gray-500">Aucune commande trouvée.</div>
+          ) : (
+            <ul className="space-y-2">
+              {orders
+                .filter(order => !order.validated && (!bakeryFilter || order.bakery === bakeryFilter))
+                .map((order, index) => (
+                  <li key={order.id} className="p-4 border rounded bg-white shadow">
+                    <p className="font-bold">Commande #{(index + 1) % 99 || 1}</p>
+                    <p>Client : {order.name} ({order.email})</p>
+                    <p>Date : {new Date(order.createdAt).toLocaleString()}</p>
+                    <p>Téléphone : {order.phone || "Non renseigné"}</p>
+                    <p>Boulangerie : {order.bakery || "Non renseignée"}</p>
+                    <p>Heure de passage : {order.time || "Non renseigné"}</p>
+                    <p>🔐 Code de retrait : <strong>{order.pin}</strong></p>
+                    <ul className="ml-4 list-disc">
+                      {order.items.map((item) => (
+                        <li key={item.id}>
+                          {item.product.name} — {item.quantity}
+                        </li>
+                      ))}
+                    </ul>
 
-            <li key={order.id} className="p-4 border rounded-lg bg-white shadow space-y-2">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-[#1c140d]">Commande #{order.id}</h3>
-              <span className="text-sm text-gray-600">{new Date(order.createdAt).toLocaleString()}</span>
-            </div>
+                    {order.status ==="pending" && (
+                      <button
+                        onClick={() => handleUpdateStatus(order.id, "ready")}
+                        className="mt-2 bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600 transition-colors"
+                      >
+                        🚧 Marquer comme prête
+                      </button>
+                    )}
 
-            <div className="text-sm text-gray-700">
-              <p><strong>Client :</strong> {order.name} ({order.email})</p>
-              <p><strong>Téléphone :</strong> {order.phone || "Non renseigné"}</p>
-              <p><strong>Boulangerie :</strong> {order.bakery || "Non renseignée"}</p>
-              <p><strong>Heure de passage :</strong> {order.time || "Non renseigné"}</p>
-              <p><strong>🔐 Code de retrait :</strong> {order.pin}</p>
-            </div>
+                    {order.status === "ready" && (
+                      <button
+                        onClick={() => handleMarkPickedUp(order.id)}
+                        className="mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors"
+                      >
+                        ✅ Marquer comme emportée
+                      </button>
+                    )}
 
-            <ul className="pl-4 list-disc text-sm text-gray-800">
-              {order.items.map((item) => (
-                <li key={item.id}>
-                  {item.product.name} — {item.quantity}
-                </li>
-              ))}
+                    {order.status === "picked_up"  && (
+                      <p className="mt-2 text-sm text-green-700 font-semibold">Commande emportée ✔</p>
+                    )}
+                  </li>
+                ))}
             </ul>
-
-            <button
-              onClick={() => handleValidateOrder(order.id, order.pin || "")}
-              className="bg-blue-600 text-white px-3 py-1 rounded text-sm mt-2"
-            >
-              ✔ Valider la commande
-            </button>
-          </li>
-
-            
-            
-          ))}
-        </ul>
+          )}
+        </>
       )}
+
       {activeTab === "products" && (
 
       <ul className="space-y-2">
