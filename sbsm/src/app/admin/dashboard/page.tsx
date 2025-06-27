@@ -65,13 +65,14 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [restockValue, setRestockValue] = useState<{ [id: string]: number }>({});
   const [activeTab, setActiveTab] = useState<"products" | "add" | "orders" | "archived" | "history">("products");
-  const [showArchived, setShowArchived] = useState(false); // Toggle for showing archived products
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
   const [type, setType] = useState<string[]>([]);
   const [newType, setNewType] = useState("");
   const [bakeryFilter, setBakeryFilter] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
 
 
 
@@ -81,18 +82,28 @@ export default function DashboardPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetch("/api/products?includeArchived=true")
-      .then(res => res.json())
-      .then(data => setProducts(data));
-  }, []);
-  useEffect(() => {
-    fetch("/api/order")
-      .then((res) => res.json())
-      .then((data) => {
-        setOrders(data);
-      })
-      .catch((err) => {
-      });
+    async function loadData() {
+      try {
+        const [productsRes, ordersRes] = await Promise.all([
+          fetch("/api/products?includeArchived=true"),
+          fetch("/api/order"),
+        ]);
+
+        const [productsData, ordersData] = await Promise.all([
+          productsRes.json(),
+          ordersRes.json(),
+        ]);
+
+        setProducts(productsData);
+        setOrders(ordersData);
+      } catch (err) {
+        console.error("Erreur de chargement :", err);
+      } finally {
+        setLoading(false); // toujours désactiver le chargement à la fin
+      }
+    }
+
+    loadData();
   }, []);
   const generateAllOrdersPdf = () => {
     const doc = new jsPDF();
@@ -246,7 +257,13 @@ export default function DashboardPage() {
   
 
 
-
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin h-12 w-12 border-4 border-t-[#1c140d] border-gray-300 rounded-full"></div>
+      </div>
+    );
+  }
   return (
      <div className="p-8 max-w-2xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Tableau de bord – Produits 🧁</h1>

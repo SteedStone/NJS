@@ -36,6 +36,8 @@ export default function OrderPage() {
   const { cart, addToCart, removeFromCart } = useCart();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
   if (typeof window !== "undefined") {
@@ -48,9 +50,14 @@ export default function OrderPage() {
 }, []);
 
   useEffect(() => {
+    setLoading(true);
     fetch("/api/products")
       .then((res) => res.json())
-      .then((data) => setProducts(data));
+      .then((data) => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false)); // Important pour éviter blocage en cas d'erreur
   }, []);
 
   // Initialize selected quantities
@@ -153,6 +160,11 @@ export default function OrderPage() {
       </div>
 
       {/* 📦 AFFICHAGE DES PRODUITS */}
+      {loading ? (
+        <div className="flex justify-center items-center h-64 w-full">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#1c140d]"></div>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {products
           .filter((p) =>
@@ -268,9 +280,10 @@ export default function OrderPage() {
             );
           })}
       </div>
+      )}
 
       {/* 🛑 Aucun produit trouvé */}
-      {products.filter((p) =>
+      {!loading && products.filter((p) =>
         (selectedCategories.length === 0 || p.categories?.some((cat) => selectedCategories.includes(cat))) &&
         p.name.toLowerCase().includes(searchTerm)
       ).length === 0 && (
