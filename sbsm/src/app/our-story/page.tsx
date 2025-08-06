@@ -55,8 +55,8 @@ export default function AboutPage() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          viewport={{ once: true }}
-          className="flex flex-col md:flex-row items-center gap-10 bg-white/70 p-6 rounded-xl shadow"
+          className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-10 bg-white/70 p-4 sm:p-6 rounded-xl
+      shadow"
         >
           <TiltedCard
             imageSrc="/images/boulangerie.jpg"
@@ -78,8 +78,8 @@ export default function AboutPage() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          viewport={{ once: true }}
-          className="flex flex-col md:flex-row-reverse items-center gap-10 bg-white/70 p-6 rounded-xl shadow"
+          className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-10 bg-white/70 p-4 sm:p-6 rounded-xl
+  shadow"
         >
           <TiltedCard
             imageSrc="/images/pain2.jpg"
@@ -101,8 +101,8 @@ export default function AboutPage() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          viewport={{ once: true }}
-          className="flex flex-col md:flex-row items-center gap-10 bg-white/70 p-6 rounded-xl shadow"
+          className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-10 bg-white/70 p-4 sm:p-6 rounded-xl
+  shadow"
         >
           <TiltedCard
             imageSrc="/images/team.jpg"
@@ -124,8 +124,8 @@ export default function AboutPage() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          viewport={{ once: true }}
-          className="bg-white/70 p-6 rounded-xl shadow text-center"
+          className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-10 bg-white/70 p-4 sm:p-6 rounded-xl
+  shadow"
         >
           <h2 className="text-2xl font-bold text-[#1b140d] mb-2">Où nous trouver ?</h2>
           <p className="text-[#1c140d] mb-4">Retrouvez-nous au cœur de Paris, à deux pas de la place de la République.</p>

@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
+import ProductsTab from "../../_components/componentsDashboards/ProductsTab";
+
 
 
 // ⚠️ Ce composant suppose que l'accès est maintenant protégé côté serveur via un cookie + middleware
@@ -265,12 +267,12 @@ export default function DashboardPage() {
     );
   }
   return (
-     <div className="p-8 max-w-2xl mx-auto space-y-6">
+     <div className="p-4 sm:p-6 lg:p-8 max-w-full sm:max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold">Tableau de bord – Produits 🧁</h1>
-    <div className="flex justify-center mb-8 space-x-4">
+    <div className="flex flex-wrap justify-center mb-6 sm:mb-8 gap-2 sm:gap-4">
       <button
         onClick={() => setActiveTab("products")}
-        className={`px-4 py-2 rounded font-semibold ${
+        className={`px-3 py-2 sm:px-4 text-sm font-semibold rounded ${
           activeTab === "products"
             ? "bg-[#1c140d] text-white"
             : "bg-gray-200 text-[#1c140d]"
@@ -566,141 +568,43 @@ export default function DashboardPage() {
       )}
 
       {activeTab === "products" && (
-
-      <ul className="space-y-2">
-        {products.filter(p => !p.archived).map(product => (
-
-          <li key={product.id} className="p-4 border rounded-xl bg-white shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div className="flex items-center gap-4">
-        {product.image && (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="h-24 w-24 object-cover rounded-lg border"
-          />
-        )}
-        <div>
-          <p className="font-semibold text-lg text-[#1c140d]">{product.name}</p>
-          <p className="text-sm text-gray-600">
-            {product.price} € — <span className="font-medium">{product.quantity}</span> en stock
-          </p>
-        </div>
-      </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              placeholder="Ajout"
-              value={restockValue[product.id] || ""}
-              onChange={(e) =>
-                setRestockValue((prev) => ({
-                  ...prev,
-                  [product.id]: parseInt(e.target.value || "0"),
-                }))
-              }
-              className="w-20 p-1 border rounded text-sm text-center"
-            />
-            <button
-              onClick={async () => {
-                const quantityToAdd = restockValue[product.id] || 0;
-                if (quantityToAdd <= 0) return;
-
-                const res = await fetch("/api/products", {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ id: product.id, quantityToAdd }),
-                });
-                
-
-                if (res.ok) {
-                  const updated = await res.json();
-                  setProducts((prev) =>
-                    prev.map((p) =>
-                      p.id === updated.id ? { ...p, quantity: updated.quantity } : p
-                    )
-                  );
-                  setRestockValue((prev) => ({ ...prev, [product.id]: 0 }));
-                }
-              }}
-              className="bg-green-600 text-white px-3 py-1 rounded text-sm"
-            >
-              ➕ Restocker
-            </button>
-           <button
-              onClick={async () => {
-                const res = await fetch("/api/products", {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ id: product.id, archive: true }),
-                });
-
-                if (res.ok) {
-                  setProducts(prev => prev.map(p => 
-                    p.id === product.id ? { ...p, archived: true } : p
-                  ));
-                }
-              }}
-              className="bg-red-600 text-white px-3 py-1 rounded text-sm"
-            >
-              Archiver
-            </button>
-            <button
-              onClick={async () => {
-                const confirmDelete = confirm("Supprimer ce produit définitivement ?");
-                if (!confirmDelete) return;
-
-                const res = await fetch(`/api/products?id=${product.id}`, {
-                  method: "DELETE",
-                });
-
-                if (res.ok) {
-                  setProducts(prev => prev.filter(p => p.id !== product.id));
-                } else {
-                  alert("Erreur lors de la suppression.");
-                }
-              }}
-              className="bg-red-800 text-white px-3 py-1 rounded text-sm"
-            >
-              🗑 Supprimer
-            </button>
-          </div>
-        </li>
-
-        ))}
-        
-        
-      </ul>
-      )}
+      <ProductsTab
+        products={products}
+        restockValue={restockValue}
+        setRestockValue={setRestockValue}
+        setProducts={setProducts}
+      />
+  )}
       {activeTab === "archived" && (
-  <ul className="space-y-2">
-    {products.filter(p => p.archived).map(product => (
-      <li key={product.id} className="p-4 border rounded-xl bg-gray-100 shadow-sm flex justify-between items-center">
-        <div>
-          <p className="font-semibold">{product.name}</p>
-          <p className="text-sm text-gray-500">{product.price} € — Stock : {product.quantity}</p>
-        </div>
-        <button
-          onClick={async () => {
-            const res = await fetch("/api/products", {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: product.id, archive: false }),
-            });
+        <ul className="space-y-2">
+          {products.filter(p => p.archived).map(product => (
+            <li key={product.id} className="p-4 border rounded-xl bg-gray-100 shadow-sm flex justify-between items-center">
+              <div>
+                <p className="font-semibold">{product.name}</p>
+                <p className="text-sm text-gray-500">{product.price} € — Stock : {product.quantity}</p>
+              </div>
+              <button
+                onClick={async () => {
+                  const res = await fetch("/api/products", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: product.id, archive: false }),
+                  });
 
-            if (res.ok) {
-              setProducts(prev => prev.map(p =>
-                p.id === product.id ? { ...p, archived: false } : p
-              ));
-            }
-          }}
-          className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
-        >
-          ✅ Rendre disponible
-        </button>
-      </li>
-    ))}
-  </ul>
-)}
+                  if (res.ok) {
+                    setProducts(prev => prev.map(p =>
+                      p.id === product.id ? { ...p, archived: false } : p
+                    ));
+                  }
+                }}
+                className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
+              >
+                ✅ Rendre disponible
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {activeTab === "history" && (
         <ul className="space-y-2">

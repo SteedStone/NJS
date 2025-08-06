@@ -107,57 +107,88 @@ export default function OrderPage() {
   const productsExist = products.length > 0;
 
   return (
-  <div className="min-h-screen bg-[#fcfaf8] px-4 py-8 md:px-10 md:py-12 flex gap-8">
-    {/* 🧭 MENU LATÉRAL */}
-    <aside className="w-48 shrink-0">
-      <h2 className="text-lg font-semibold text-[#1c140d] mb-4">Catégories</h2>
-      <ul className="space-y-2">
-        <li>
+  <div className="min-h-screen bg-[#fcfaf8] px-4 py-6 sm:py-8 md:px-10 md:py-12">
+    {/* 🧭 MOBILE CATEGORY FILTER */}
+    <div className="lg:hidden mb-6">
+      <h2 className="text-lg font-semibold text-[#1c140d] mb-3">Catégories</h2>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setSelectedCategories([])}
+          className={`px-3 py-2 text-sm rounded-full ${
+            selectedCategories.length === 0
+              ? "bg-[#1c140d] text-white"
+              : "bg-white text-[#1c140d] border hover:bg-gray-50"
+          }`}
+        >
+          Tous
+        </button>
+        {PREDEFINED_CATEGORIES.map((cat) => (
           <button
-            onClick={() => setSelectedCategories([])}
-            className={`w-full text-left px-3 py-1.5 rounded ${
-              selectedCategories.length === 0
+            key={cat}
+            onClick={() => setSelectedCategories([cat])}
+            className={`px-3 py-2 text-sm rounded-full ${
+              selectedCategories.includes(cat)
                 ? "bg-[#1c140d] text-white"
-                : "text-[#1c140d] hover:bg-gray-200"
+                : "bg-white text-[#1c140d] border hover:bg-gray-50"
             }`}
           >
-            Tous les produits
+            {cat}
           </button>
-        </li>
-        {PREDEFINED_CATEGORIES.map((cat) => (
-          <li key={cat}>
+        ))}
+      </div>
+    </div>
+
+    <div className="lg:flex lg:gap-8">
+      {/* 🧭 DESKTOP SIDEBAR */}
+      <aside className="hidden lg:block w-48 shrink-0">
+        <h2 className="text-lg font-semibold text-[#1c140d] mb-4">Catégories</h2>
+        <ul className="space-y-2">
+          <li>
             <button
-              onClick={() => setSelectedCategories([cat])}
+              onClick={() => setSelectedCategories([])}
               className={`w-full text-left px-3 py-1.5 rounded ${
-                selectedCategories.includes(cat)
+                selectedCategories.length === 0
                   ? "bg-[#1c140d] text-white"
                   : "text-[#1c140d] hover:bg-gray-200"
               }`}
             >
-              {cat}
+              Tous les produits
             </button>
           </li>
-        ))}
-      </ul>
-    </aside>
+          {PREDEFINED_CATEGORIES.map((cat) => (
+            <li key={cat}>
+              <button
+                onClick={() => setSelectedCategories([cat])}
+                className={`w-full text-left px-3 py-1.5 rounded ${
+                  selectedCategories.includes(cat)
+                    ? "bg-[#1c140d] text-white"
+                    : "text-[#1c140d] hover:bg-gray-200"
+                }`}
+              >
+                {cat}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </aside>
 
-    {/* 🧁 CONTENU PRINCIPAL */}
-    <main className="flex-1">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-[#1c140d]">
-          {selectedCategories.length === 0
-            ? "Tous les produits"
-            : selectedCategories[0]}
-        </h1>
+      {/* 🧁 CONTENU PRINCIPAL */}
+      <main className="flex-1">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1c140d]">
+            {selectedCategories.length === 0
+              ? "Tous les produits"
+              : selectedCategories[0]}
+          </h1>
 
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-          placeholder="🔍 Rechercher un produit..."
-          className="w-full md:w-64 border px-3 py-1.5 rounded bg-white text-sm"
-        />
-      </div>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
+            placeholder="🔍 Rechercher un produit..."
+            className="w-full sm:w-64 border px-3 py-2 rounded bg-white text-sm"
+          />
+        </div>
 
       {/* 📦 AFFICHAGE DES PRODUITS */}
       {loading ? (
@@ -165,7 +196,7 @@ export default function OrderPage() {
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#1c140d]"></div>
         </div>
       ) : (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {products
           .filter((p) =>
             selectedCategories.length === 0 ||
@@ -182,7 +213,7 @@ export default function OrderPage() {
             return (
               <div
                 key={product.id}
-                className="flex flex-col gap-3 bg-white rounded-xl p-4 shadow-md h-full"
+                className="flex flex-col gap-3 bg-white rounded-xl p-3 sm:p-4 shadow-md h-full"
               >
                 <div className="aspect-square w-full overflow-hidden rounded-lg">
                   <div
@@ -194,10 +225,10 @@ export default function OrderPage() {
                 </div>
 
                 <div className="flex flex-col gap-2 flex-grow">
-                  <p className="text-[#1c140d] text-base font-medium leading-normal line-clamp-2 h-12">
+                  <p className="text-[#1c140d] text-sm sm:text-base font-medium leading-normal line-clamp-2 min-h-[2.5rem]">
                     {product.name}
                   </p>
-                  <p className="text-sm text-gray-600 line-clamp-3">
+                  <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 sm:line-clamp-3">
                     {product.description}
                   </p>
 
@@ -218,12 +249,12 @@ export default function OrderPage() {
                     }).format(product.price)}
                   </p>
 
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-3">
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleDecrement(product.id)}
                       disabled={!isAvailable || selectedQuantity === 0}
-                      className="w-8 h-8 flex items-center justify-center bg-[#f3ede7] rounded-full disabled:opacity-50"
+                      className="w-10 h-10 flex items-center justify-center bg-[#f3ede7] rounded-full disabled:opacity-50 text-lg font-semibold"
                     >
                       -
                     </motion.button>
@@ -240,14 +271,14 @@ export default function OrderPage() {
                         )
                       }
                       disabled={!isAvailable}
-                      className="w-16 px-2 py-1 border rounded text-center text-sm bg-white"
+                      className="w-16 px-2 py-2 border rounded text-center text-sm bg-white"
                     />
 
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleIncrement(product.id)}
                       disabled={!isAvailable || selectedQuantity >= product.quantity}
-                      className="w-8 h-8 flex items-center justify-center bg-[#f3ede7] rounded-full disabled:opacity-50"
+                      className="w-10 h-10 flex items-center justify-center bg-[#f3ede7] rounded-full disabled:opacity-50 text-lg font-semibold"
                     >
                       +
                     </motion.button>
@@ -258,7 +289,7 @@ export default function OrderPage() {
                       <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => removeFromCart(product.id)}
-                        className="w-full bg-red-600 text-white py-2 px-4 rounded text-sm"
+                        className="w-full bg-red-600 text-white py-3 px-4 rounded text-sm font-medium"
                       >
                         Retirer du panier
                       </motion.button>
@@ -267,7 +298,7 @@ export default function OrderPage() {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleAddToCart(product)}
                         disabled={selectedQuantity === 0}
-                        className={`w-full bg-[#1c140d] text-white py-2 px-4 rounded text-sm ${
+                        className={`w-full bg-[#1c140d] text-white py-3 px-4 rounded text-sm font-medium ${
                           selectedQuantity === 0 ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                       >
@@ -291,7 +322,8 @@ export default function OrderPage() {
           Aucun produit trouvé.
         </p>
       )}
-    </main>
+      </main>
+    </div>
   </div>
 );
 }

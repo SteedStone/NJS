@@ -12,7 +12,7 @@ export default function HomePage() {
       {/* DotGrid background */}
       <div className="absolute inset-0 -z-10">
         <DotGrid
-          dotSize={10}
+          dotSize={5}
           gap={18}
           baseColor="#f0eae4"
           activeColor="#eb7f13"
@@ -29,11 +29,11 @@ export default function HomePage() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
-        className="flex flex-col items-center justify-center text-center px-6 py-32"
-      >
+        className="flex flex-col items-center justify-center text-center px-4 sm:px-6 py-16 sm:py-24 lg:py-32"      
+        >
         <SplitText
           text="The Daily Crumb"
-          className="text-5xl font-black mb-4 text-[#1c140d]"
+          className="text-3xl sm:text-4xl lg:text-5xl font-black mb-4 text-[#1c140d]"
           delay={100}
           duration={0.6}
           ease="power3.out"
@@ -44,7 +44,7 @@ export default function HomePage() {
           rootMargin="-100px"
           textAlign="center"
         />
-        <p className="text-lg max-w-xl mb-6 text-[#1c140d]">
+        <p className="text-base sm:text-lg max-w-xl mb-6 text-[#1c140d]">
           Boulangerie artisanale — pains frais, viennoiseries dorées, douceurs maison, tous les jours.
         </p>
         <Link
@@ -61,8 +61,7 @@ export default function HomePage() {
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
-        viewport={{ once: true }}
-        className="max-w-6xl mx-auto px-6 py-20"
+       className="max-w-6xl mx-auto px-6 py-20"
       >
       <div className="bg-white/70 rounded-xl p-6 shadow-md">
 
@@ -110,7 +109,6 @@ export default function HomePage() {
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
-        viewport={{ once: true }}
         className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10 px-6 py-16 "
       >
         <div className="bg-white/70 rounded-xl p-6 w-full shadow-inner flex flex-col md:flex-row items-center gap-10">
@@ -145,8 +143,7 @@ export default function HomePage() {
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7 }}
-        viewport={{ once: true }}
-        className="text-center bg-[#f3ede7] p-12 rounded-xl shadow-inner max-w-4xl mx-auto mb-16"
+       className="text-center bg-[#f3ede7] p-12 rounded-xl shadow-inner max-w-4xl mx-auto mb-16"
       >
         <h2 className="text-2xl font-bold mb-2 text-[#1b140d]">Envie d’un goûter maison ?</h2>
         <p className="text-sm mb-4 text-[#9a734c]">
