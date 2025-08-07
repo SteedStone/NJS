@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { motion } from "framer-motion";
+import ProductSkeleton from "../_components/ProductSkeleton";
+import OptimizedImage from "../_components/OptimizedImage";
+import SearchAutocomplete from "../_components/SearchAutocomplete";
 
 
 export type Product = {
@@ -181,19 +184,20 @@ export default function OrderPage() {
               : selectedCategories[0]}
           </h1>
 
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
-            placeholder="🔍 Rechercher un produit..."
-            className="w-full sm:w-64 border px-3 py-2 rounded bg-white text-sm"
+          <SearchAutocomplete
+            products={products}
+            searchTerm={searchTerm}
+            onSearchChange={(value) => setSearchTerm(value.toLowerCase())}
+            className="w-full sm:w-64"
           />
         </div>
 
       {/* 📦 AFFICHAGE DES PRODUITS */}
       {loading ? (
-        <div className="flex justify-center items-center h-64 w-full">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#1c140d]"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <ProductSkeleton key={index} />
+          ))}
         </div>
       ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -216,12 +220,12 @@ export default function OrderPage() {
                 className="flex flex-col gap-3 bg-white rounded-xl p-3 sm:p-4 shadow-md h-full"
               >
                 <div className="aspect-square w-full overflow-hidden rounded-lg">
-                  <div
-                    className="w-full h-full bg-cover bg-center"
-                    style={{
-                      backgroundImage: `url('${product.image || "/placeholder-image.jpg"}')`,
-                    }}
-                  ></div>
+                  <OptimizedImage
+                    src={product.image || "/images/placeholder-product.svg"}
+                    alt={product.name}
+                    fill={true}
+                    className="aspect-square"
+                  />
                 </div>
 
                 <div className="flex flex-col gap-2 flex-grow">

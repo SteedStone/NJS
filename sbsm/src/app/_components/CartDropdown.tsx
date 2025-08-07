@@ -2,6 +2,7 @@
 import { useCart } from "../context/CartContext";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import OptimizedImage from "./OptimizedImage";
 
 export default function CartDropdown() {
   const { cart, getTotalItems, removeFromCart , getTotalPrice } = useCart();
@@ -17,7 +18,7 @@ export default function CartDropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute right-0 mt-2 w-64 sm:w-80 max-w-[90vw] bg-white border border-gray-200 rounded-lg shadow-lg z-50">
           {cart.length === 0 ? (
             <div className="p-4 text-sm text-gray-500">
               Votre panier est vide.
@@ -32,10 +33,14 @@ export default function CartDropdown() {
                   >
                     <div className="flex items-center gap-2">
                       {item.image && (
-                        <div
-                          className="w-8 h-8 bg-cover bg-center rounded"
-                          style={{ backgroundImage: `url('${item.image}')` }}
-                        />
+                        <div className="w-8 h-8 relative overflow-hidden rounded">
+                          <OptimizedImage
+                            src={item.image}
+                            alt={item.name}
+                            fill={true}
+                            className="w-8 h-8"
+                          />
+                        </div>
                       )}
                       <div>
                         <div className="font-medium">{item.name}</div>

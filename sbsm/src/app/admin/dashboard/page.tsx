@@ -268,7 +268,7 @@ export default function DashboardPage() {
   }
   return (
      <div className="p-4 sm:p-6 lg:p-8 max-w-full sm:max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Tableau de bord – Produits 🧁</h1>
+      <h1 className="text-2xl font-bold">Tableau de bord – Produits </h1>
     <div className="flex flex-wrap justify-center mb-6 sm:mb-8 gap-2 sm:gap-4">
       <button
         onClick={() => setActiveTab("products")}
@@ -278,7 +278,7 @@ export default function DashboardPage() {
             : "bg-gray-200 text-[#1c140d]"
         }`}
       >
-                📦 Produits
+                 Produits
 
       </button>
       <button
@@ -289,7 +289,7 @@ export default function DashboardPage() {
             : "bg-gray-200 text-[#1c140d]"
         }`}
       >
-                ➕ Ajouter
+                 Ajouter
 
       </button>
       <button
@@ -300,8 +300,7 @@ export default function DashboardPage() {
             : "bg-gray-200 text-[#1c140d]"
         }`}
       >
-        
-        📋 Commandes
+        Commandes
       </button>
       <button
         onClick={() => setActiveTab("archived")}
@@ -321,7 +320,7 @@ export default function DashboardPage() {
             : "bg-gray-200 text-[#1c140d]"
         }`}
       >
-        📦 Historique
+         Historique
       </button>
     </div>
 

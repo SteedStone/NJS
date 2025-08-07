@@ -1,5 +1,6 @@
 import React from "react";
 import type { Product} from "./types";
+import OptimizedImage from "../OptimizedImage";
 
 type ProductsTabProps = {
   products: Product[];
@@ -71,11 +72,14 @@ export default function ProductsTab({
         >
           <div className="flex items-center gap-4">
             {product.image && (
-              <img
-                src={product.image}
-                alt={product.name}
-                className="h-24 w-24 object-cover rounded-lg border"
-              />
+              <div className="h-24 w-24 relative overflow-hidden rounded-lg border">
+                <OptimizedImage
+                  src={product.image}
+                  alt={product.name}
+                  fill={true}
+                  className="h-24 w-24"
+                />
+              </div>
             )}
             <div>
               <p className="font-semibold text-lg text-[#1c140d]">{product.name}</p>

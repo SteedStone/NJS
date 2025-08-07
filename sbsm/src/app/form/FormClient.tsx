@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import OptimizedImage from "../_components/OptimizedImage";
 
 // Tes types
 type CartItem = {
@@ -150,11 +151,14 @@ export default function FormClient() {
                 </p>
               </div>
               {item.image && (
-                <img
-                  src={item.image}
-                  alt={product?.name}
-                  className="w-12 h-12 object-cover rounded ml-2"
-                />
+                <div className="w-12 h-12 relative overflow-hidden rounded ml-2">
+                  <OptimizedImage
+                    src={item.image}
+                    alt={product?.name || 'Product image'}
+                    fill={true}
+                    className="w-12 h-12"
+                  />
+                </div>
               )}
             </li>
           );

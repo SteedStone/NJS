@@ -1,9 +1,10 @@
 import type { SpringOptions } from "framer-motion";
 import { useRef, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
+import OptimizedImage from "../_components/OptimizedImage";
 
 interface TiltedCardProps {
-  imageSrc: React.ComponentProps<"img">["src"];
+  imageSrc: string;
   altText?: string;
   captionText?: string;
   containerHeight?: React.CSSProperties['height'];
@@ -116,15 +117,20 @@ export default function TiltedCard({
           scale,
         }}
       >
-        <motion.img
-          src={imageSrc}
-          alt={altText}
-          className="absolute top-0 left-0 object-cover rounded-[15px] will-change-transform [transform:translateZ(0)]"
+        <motion.div
+          className="absolute top-0 left-0 will-change-transform [transform:translateZ(0)] overflow-hidden rounded-[15px]"
           style={{
             width: imageWidth,
             height: imageHeight,
           }}
-        />
+        >
+          <OptimizedImage
+            src={imageSrc || ""}
+            alt={altText || "Tilted card image"}
+            fill={true}
+            className="w-full h-full"
+          />
+        </motion.div>
 
         {displayOverlayContent && overlayContent && (
           <motion.div
