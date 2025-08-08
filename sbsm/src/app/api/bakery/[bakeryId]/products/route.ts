@@ -37,12 +37,24 @@ export async function POST(
     const { bakeryId } = await params;
     const data = await request.json();
 
+    // Verify bakery exists before creating product
+    const bakery = await db.bakery.findUnique({
+      where: { id: bakeryId }
+    });
+
+    if (!bakery) {
+      return NextResponse.json(
+        { error: "Boulangerie introuvable" },
+        { status: 404 }
+      );
+    }
+
     // Create product for this specific bakery
     const product = await db.product.create({
       data: {
         name: data.name,
-        price: parseFloat(data.price),
-        quantity: parseInt(data.quantity),
+        price: typeof data.price === 'number' ? data.price : parseFloat(data.price),
+        quantity: typeof data.quantity === 'number' ? data.quantity : parseInt(data.quantity),
         image: data.image || null,
         description: data.description || null,
         categories: data.categories || [],

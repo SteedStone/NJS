@@ -22,20 +22,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bakeryId is required" }, { status: 400 });
   }
 
-  const newProduct = await prisma.product.create({
-    data: {
-      name,
-      price: parseFloat(price),
-      quantity: parseInt(quantity),
-      image,
-      description,
-      categories,
-      types,
-      bakeryId,
-    },
-  });
+  try {
+    const newProduct = await prisma.product.create({
+      data: {
+        name,
+        price: typeof price === 'number' ? price : parseFloat(price),
+        quantity: typeof quantity === 'number' ? quantity : parseInt(quantity),
+        image,
+        description,
+        categories,
+        types,
+        bakeryId,
+      },
+    });
 
-  return NextResponse.json(newProduct);
+    return NextResponse.json(newProduct);
+  } catch (error) {
+    console.error("Error creating product:", error);
+    return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
+  }
 }
 
 
