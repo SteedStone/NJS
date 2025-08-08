@@ -103,9 +103,6 @@ model Product {
   bakery     Bakery?        @relation(fields: [bakeryId], references: [id], onDelete: Cascade)
   
   @@index([bakeryId])
-  @@index([name])
-  @@index([bakeryId, name])
-  @@index([bakeryId, archived])
 }
 
 
@@ -125,11 +122,6 @@ model Order {
   status        String?     @default("pending")
   paymentMethod String?     @default("stripe")  // "stripe" or "bakery"
   isPaid        Boolean     @default(false)     // Track if payment is completed
-  
-  @@index([bakeryId])
-  @@index([createdAt])
-  @@index([status])
-  @@index([bakeryId, status])
 }
 
 model OrderItem {
@@ -139,7 +131,4 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
   productId String
   quantity  Int
-  
-  @@index([orderId])
-  @@index([productId])
 }

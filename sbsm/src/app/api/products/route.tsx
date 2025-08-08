@@ -1,11 +1,13 @@
+import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { db } from "~/server/db";
+
+const prisma = new PrismaClient();
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const includeArchived = url.searchParams.get("includeArchived") === "true";
 
-  const products = await db.product.findMany({
+  const products = await prisma.product.findMany({
     where: includeArchived ? {} : { archived: false },
     orderBy: { createdAt: "desc" },
   });
@@ -20,7 +22,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "bakeryId is required" }, { status: 400 });
   }
 
-  const newProduct = await db.product.create({
+  const newProduct = await prisma.product.create({
     data: {
       name,
       price: parseFloat(price),
@@ -46,7 +48,7 @@ export async function PATCH(req: Request) {
   }
 
   try {
-    const updatedProduct = await db.product.update({
+    const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
         quantity: { increment: quantityToAdd },
@@ -67,7 +69,7 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
 
-  const updated = await db.product.update({
+  const updated = await prisma.product.update({
     where: { id },
     data: { archived: archive },
   });
@@ -85,7 +87,7 @@ export async function DELETE(req: Request) {
   }
 
   try {
-    await db.product.delete({
+    await prisma.product.delete({
       where: { id },
     });
     return NextResponse.json({ success: true });
