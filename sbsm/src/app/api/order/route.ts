@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { db } from "~/server/db";
 
 // POST — Ajouter une commande
 export async function POST(req: NextRequest) {
@@ -16,7 +14,7 @@ export async function POST(req: NextRequest) {
   
 
   try {
-    const order = await prisma.order.create({
+    const order = await db.order.create({
       data: {
         name,
         email,
@@ -33,17 +31,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Mettre à jour les stocks
-    for (const item of items) {
-      await prisma.product.update({
+    // Batch update inventory
+    const inventoryUpdates = items.map((item: any) => 
+      db.product.update({
         where: { id: item.productId },
-        data: {
-          quantity: {
-            decrement: item.quantity,
-          },
-        },
-      });
-    }
+        data: { quantity: { decrement: item.quantity } }
+      })
+    );
+    
+    await Promise.all(inventoryUpdates);
 
     return NextResponse.json({ success: true, order });
   } catch (error) {
@@ -55,7 +51,7 @@ export async function POST(req: NextRequest) {
 // ✅ GET — Lister les commandes
 export async function GET() {
   try {
-    const orders = await prisma.order.findMany({
+    const orders = await db.order.findMany({
       orderBy: { createdAt: "desc" },
       include: {
         items: {

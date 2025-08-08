@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { PrismaClient } from "@prisma/client";
+import { db } from "~/server/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
-
-const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
@@ -21,29 +19,37 @@ export async function POST(req: Request) {
     const orderPin = generatePin();
 
     // Find bakery ID
-    const bakery = await prisma.bakery.findFirst({
+    const bakery = await db.bakery.findFirst({
       where: { name: customer.bakery }
     });
 
     if (paymentMethod === "bakery") {
-      // First, find all the correct bakery-specific products
-      const orderItems = [];
+      // Batch fetch all bakery products to avoid N+1 queries
+      const productIds = cart.map((item: any) => item.productId);
+      const productNames = cart.map((item: any) => item.name);
       
-      for (const item of cart) {
-        // Find the product that belongs to the selected bakery
-        const bakeryProduct = await prisma.product.findFirst({
-          where: {
-            AND: [
-              { 
-                OR: [
-                  { id: item.productId },
-                  { name: item.name } // fallback in case productId is from different bakery
-                ]
-              },
-              { bakeryId: bakery?.id }
-            ]
-          }
-        });
+      const bakeryProducts = await db.product.findMany({
+        where: {
+          AND: [
+            { 
+              OR: [
+                { id: { in: productIds } },
+                { name: { in: productNames } }
+              ]
+            },
+            { bakeryId: bakery?.id }
+          ]
+        }
+      });
+
+      // Create order items and batch inventory updates
+      const orderItems = [];
+      const inventoryUpdates = [];
+      
+      for (const item of cart as any[]) {
+        const bakeryProduct = bakeryProducts.find(p => 
+          p.id === item.productId || p.name === item.name
+        );
 
         if (bakeryProduct) {
           orderItems.push({
@@ -51,19 +57,19 @@ export async function POST(req: Request) {
             quantity: item.quantity,
           });
 
-          // Update inventory
-          await prisma.product.update({
-            where: { id: bakeryProduct.id },
-            data: {
-              quantity: {
-                decrement: item.quantity,
-              },
-            },
-          });
+          inventoryUpdates.push(
+            db.product.update({
+              where: { id: bakeryProduct.id },
+              data: { quantity: { decrement: item.quantity } }
+            })
+          );
         } else {
           console.warn(`Product not found for bakery ${customer.bakery}:`, item);
         }
       }
+
+      // Execute all inventory updates in parallel
+      await Promise.all(inventoryUpdates);
 
       // Create order directly in database for bakery payment
       const orderData: any = {
@@ -86,7 +92,7 @@ export async function POST(req: Request) {
         orderData.bakeryId = bakery.id;
       }
 
-      const order = await prisma.order.create({
+      const order = await db.order.create({
         data: orderData,
         include: {
           items: {

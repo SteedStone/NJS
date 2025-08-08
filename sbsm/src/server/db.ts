@@ -1,11 +1,16 @@
 import { PrismaClient } from "@prisma/client";
 import { env } from "~/env";
 
-// 👇 Création du client
+// 👇 Création du client avec optimizations
 const createPrismaClient = () =>
   new PrismaClient({
     log:
       env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL + "?connection_limit=20&pool_timeout=20&socket_timeout=60"
+      }
+    }
   });
 
 // 👇 Déclare ici que prisma est bien un PrismaClient
