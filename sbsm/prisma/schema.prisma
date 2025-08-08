@@ -122,6 +122,7 @@ model Order {
   status        String?     @default("pending")
   paymentMethod String?     @default("stripe")  // "stripe" or "bakery"
   isPaid        Boolean     @default(false)     // Track if payment is completed
+  sessionId     String?     // Stripe session ID to prevent duplicates
 }
 
 model OrderItem {

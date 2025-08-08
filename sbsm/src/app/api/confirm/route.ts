@@ -13,9 +13,22 @@ export async function POST(req: Request) {
   const { sessionId } = await req.json();
 
   try {
-  const session = await stripe.checkout.sessions.retrieve(sessionId, {
-    expand: ["line_items", "line_items.data.price.product"],
-  });
+    // Check if order already exists for this specific sessionId
+    const existingOrder = await prisma.order.findFirst({
+      where: {
+        sessionId: sessionId
+      },
+      include: { items: true }
+    });
+
+    if (existingOrder) {
+      console.log(`Order already exists for session ${sessionId}, returning existing order`);
+      return NextResponse.json(existingOrder);
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ["line_items", "line_items.data.price.product"],
+    });
     const metadata = session.metadata;
 
     if (!metadata?.cart || !metadata.customerEmail || !metadata.customerName) {
@@ -82,6 +95,7 @@ export async function POST(req: Request) {
       paymentMethod: metadata.paymentMethod || "stripe",
       isPaid: true, // Stripe payments are always paid
       status: "pending",
+      sessionId: sessionId, // Store sessionId to prevent duplicates
       items: {
         create: orderItems
       },
