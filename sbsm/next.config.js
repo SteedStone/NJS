@@ -14,6 +14,20 @@ const config = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+  experimental: {
+    workerThreads: false,
+    cpus: 1
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.optimization.minimize = false;
+    }
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'jest-worker': false,
+    };
+    return config;
+  }
 };
 
 export default config;

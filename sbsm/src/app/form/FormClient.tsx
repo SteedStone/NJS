@@ -4,19 +4,28 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import OptimizedImage from "../_components/OptimizedImage";
+import { BAKERIES } from "../constants/bakeries";
 
-// Tes types
+// Types
 type CartItem = {
   productId: string;
   quantity: number;
   price?: number;
   image?: string;
 };
+
 type Product = {
   id: string;
   name: string;
   price: number;
-  quantity: number;
+  totalQuantity: number;
+  availability: {
+    bakeryId: string;
+    bakeryName: string;
+    bakeryAddress?: string;
+    quantity: number;
+    productId: string;
+  }[];
 };
 
 const timeperiod = [
@@ -36,11 +45,7 @@ const timeperiod = [
   "20:00 - 21:00",
 ];
 
-const bakeries = [
-  { id: "1", name: "Boulangerie Centrale", lat: 48.8566, lng: 2.3522 },
-  { id: "2", name: "Pain d’Or", lat: 48.864716, lng: 2.349014 },
-  { id: "3", name: "Le Croissant Doré", lat: 48.86, lng: 2.34 },
-];
+// Use bakeries from constants
 
 function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
   const toRad = (x: number) => (x * Math.PI) / 180;
@@ -64,27 +69,61 @@ export default function FormClient() {
   const [phone, setPhone] = useState("");
   const [selectedBakery, setSelectedBakery] = useState("");
   const [time, setTime] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("stripe");
+
+  // Get bakeries that have all items in cart in stock
+  const getAvailableBakeries = () => {
+    if (cart.length === 0 || products.length === 0) {
+      return BAKERIES; // Show all bakeries if no cart items
+    }
+
+    return BAKERIES.filter(bakery => {
+      // Check if this bakery has all cart items in sufficient quantity
+      return cart.every(cartItem => {
+        const product = products.find(p => p.id === cartItem.productId);
+        if (!product) return false;
+        
+        const bakeryAvailability = product.availability.find(
+          a => a.bakeryName === bakery.name
+        );
+        
+        return bakeryAvailability && bakeryAvailability.quantity >= cartItem.quantity;
+      });
+    });
+  };
+
+  const availableBakeries = getAvailableBakeries();
 
   useEffect(() => {
     const cartParam = searchParams.get("cart");
     if (cartParam) {
       setCart(JSON.parse(decodeURIComponent(cartParam)));
     }
-    fetch("/api/products")
+    fetch("/api/products/cross-bakery")
       .then((res) => res.json())
-      .then((data) => setProducts(data));
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else {
+          setProducts([]);
+        }
+      })
+      .catch(() => setProducts([]));
   }, []);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        const closest = bakeries.reduce((prev, curr) => {
-          const prevDist = haversine(latitude, longitude, prev.lat, prev.lng);
-          const currDist = haversine(latitude, longitude, curr.lat, curr.lng);
-          return currDist < prevDist ? curr : prev;
-        });
-        setSelectedBakery(closest.name);
+        const availableBakeries = getAvailableBakeries();
+        if (availableBakeries.length > 0) {
+          const closest = availableBakeries.reduce((prev, curr) => {
+            const prevDist = haversine(latitude, longitude, prev.latitude, prev.longitude);
+            const currDist = haversine(latitude, longitude, curr.latitude, curr.longitude);
+            return currDist < prevDist ? curr : prev;
+          });
+          setSelectedBakery(closest.name);
+        }
       },
       () => {
         console.warn("Géolocalisation refusée");
@@ -112,15 +151,26 @@ export default function FormClient() {
         body: JSON.stringify({
           cart: enrichedCart,
           customer: { name, email : email, phone, bakery: selectedBakery, time: time },
+          paymentMethod: paymentMethod,
         }),
       });
 
       const data = await response.json();
 
-      if (data.url) {
-        window.location.href = data.url;
+      if (paymentMethod === "bakery") {
+        // For bakery payment, redirect to success page with order info
+        if (data.orderId && data.pin) {
+          window.location.href = `/success?orderId=${data.orderId}&pin=${data.pin}&payment=bakery`;
+        } else {
+          alert("Erreur : informations de commande manquantes.");
+        }
       } else {
-        alert("Erreur : aucune URL de paiement reçue.");
+        // For Stripe payment, redirect to Stripe checkout
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          alert("Erreur : aucune URL de paiement reçue.");
+        }
       }
     } catch (err) {
       console.error("Erreur lors de l'envoi au paiement :", err);
@@ -202,11 +252,16 @@ export default function FormClient() {
           className="w-full border p-2 rounded"
         >
           <option value="">Choisissez une boulangerie</option>
-          {bakeries.map((b) => (
+          {availableBakeries.map((b) => (
             <option key={b.id} value={b.name}>
-              {b.name}
+              {b.name} {availableBakeries.length < BAKERIES.length ? '✓' : ''}
             </option>
           ))}
+          {availableBakeries.length === 0 && (
+            <option value="" disabled>
+              Aucune boulangerie n'a tous les produits en stock
+            </option>
+          )}
         </select>
         <h4 className="text-lg font-semibold mb-2">
           Choisissez l'horaire de passage (Par défaut : Aucun horaire) :
@@ -224,11 +279,47 @@ export default function FormClient() {
             </option>
           ))}
         </select>
+        
+        <h4 className="text-lg font-semibold mb-2">
+          Mode de paiement :
+        </h4>
+        <div className="space-y-3">
+          <label className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="stripe"
+              checked={paymentMethod === "stripe"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="form-radio text-[#eb7f13]"
+            />
+            <div>
+              <div className="font-medium">Paiement en ligne</div>
+              <div className="text-sm text-gray-600">Payez maintenant par carte bancaire</div>
+            </div>
+          </label>
+          
+          <label className="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="bakery"
+              checked={paymentMethod === "bakery"}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="form-radio text-[#eb7f13]"
+            />
+            <div>
+              <div className="font-medium">Paiement en boulangerie</div>
+              <div className="text-sm text-gray-600">Payez directement lors du retrait</div>
+            </div>
+          </label>
+        </div>
+        
         <button
           type="submit"
           className="bg-[#1c140d] text-white px-4 py-2 rounded-xl text-sm font-semibold"
         >
-          Envoyer la commande
+          {paymentMethod === "bakery" ? "Réserver la commande" : "Envoyer la commande"}
         </button>
       </form>
     </div>

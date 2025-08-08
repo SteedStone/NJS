@@ -18,6 +18,7 @@ export const productRouter = createTRPCRouter({
         name: z.string(),
         price: z.number(),
         quantity: z.number(),
+        bakeryId: z.string(),
       })
     )
     .mutation(async ({ input }) => {
@@ -26,6 +27,7 @@ export const productRouter = createTRPCRouter({
           name: input.name,
           price: input.price,
           quantity: input.quantity,
+          bakeryId: input.bakeryId,
         },
       });
     }),

@@ -81,7 +81,7 @@ model Bakery {
   longitude       Float?
   password        String           // Individual bakery password
   createdAt       DateTime         @default(now())
-  productStock    ProductStock[]
+  products        Product[]
   orders          Order[]
 }
 
@@ -89,7 +89,7 @@ model Product {
   id         String         @id @default(cuid())
   name       String
   price      Float
-  quantity   Int            // Global quantity (sum of all bakeries)
+  quantity   Int            // Stock for this specific bakery
   createdAt  DateTime       @default(now())
   orderItems OrderItem[]
   archived   Boolean        @default(false)
@@ -97,42 +97,36 @@ model Product {
   description String?
   categories String[]
   types      String[]
-  stock      ProductStock[] // Per-bakery stock
+  
+  // Each product belongs to a specific bakery
+  bakeryId   String?
+  bakery     Bakery?        @relation(fields: [bakeryId], references: [id], onDelete: Cascade)
+  
+  @@index([bakeryId])
 }
 
-model ProductStock {
-  id        String   @id @default(cuid())
-  productId String
-  bakeryId  String
-  quantity  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  bakery    Bakery   @relation(fields: [bakeryId], references: [id], onDelete: Cascade)
-  
-  @@unique([productId, bakeryId])
-}
 
 model Order {
-  id        String      @id @default(cuid())
-  createdAt DateTime    @default(now())
-  items     OrderItem[]
-  name      String
-  email     String
-  validated Boolean     @default(false)
-  phone     String?
-  bakeryId  String?     // Reference to Bakery ID
-  bakery    Bakery?     @relation(fields: [bakeryId], references: [id])
-  bakeryName String?    // Keep bakery name for backward compatibility
-  pin       String?
-  time      String?
-  status    String?     @default("pending")
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now())
+  items         OrderItem[]
+  name          String
+  email         String
+  validated     Boolean     @default(false)
+  phone         String?
+  bakeryId      String?     // Reference to Bakery ID
+  bakery        Bakery?     @relation(fields: [bakeryId], references: [id])
+  bakeryName    String?     // Keep bakery name for backward compatibility
+  pin           String?
+  time          String?
+  status        String?     @default("pending")
+  paymentMethod String?     @default("stripe")  // "stripe" or "bakery"
+  isPaid        Boolean     @default(false)     // Track if payment is completed
 }
 
 model OrderItem {
   id        String  @id @default(cuid())
-  order     Order   @relation(fields: [orderId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId   String
   product   Product @relation(fields: [productId], references: [id])
   productId String

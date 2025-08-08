@@ -16,18 +16,22 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const { name, price, quantity, image , description, categories , types } = await req.json();
+  const { name, price, quantity, image, description, categories, types, bakeryId } = await req.json();
+
+  if (!bakeryId) {
+    return NextResponse.json({ error: "bakeryId is required" }, { status: 400 });
+  }
 
   const newProduct = await prisma.product.create({
     data: {
       name,
       price: parseFloat(price),
       quantity: parseInt(quantity),
-      image, // 👈 ajoute cette ligne
+      image,
       description,
       categories,
-      types, // 👈 important
-
+      types,
+      bakeryId,
     },
   });
 

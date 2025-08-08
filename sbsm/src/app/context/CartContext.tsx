@@ -14,8 +14,15 @@ export type Product = {
   id: string;
   name: string;
   price: number;
-  quantity: number;
+  totalQuantity: number;
   image?: string;
+  availability?: {
+    bakeryId: string;
+    bakeryName: string;
+    bakeryAddress?: string;
+    quantity: number;
+    productId: string;
+  }[];
 };
 
 type CartContextType = {
@@ -47,7 +54,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const addToCart = useCallback((product: Product, quantity: number) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
-      const clampedQuantity = Math.max(1, Math.min(quantity, product.quantity));
+      const clampedQuantity = Math.max(1, Math.min(quantity, product.totalQuantity));
       
       if (existing) {
         return prev.map((item) =>
@@ -55,7 +62,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             ? {
                 ...item,
                 quantity: clampedQuantity,
-                available: product.quantity,
+                available: product.totalQuantity,
                 price: product.price,
               }
             : item
@@ -69,7 +76,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           name: product.name,
           quantity: clampedQuantity,
           price: product.price,
-          available: product.quantity,
+          available: product.totalQuantity,
           image: product.image,
         },
       ];

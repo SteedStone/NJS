@@ -105,7 +105,7 @@ export default function AboutPage() {
   shadow"
         >
           <TiltedCard
-            imageSrc="/images/team.jpg"
+            imageSrc="/images/boulangerie.jpg"
             altText="Équipe"
             captionText="Une équipe soudée"
             rotateAmplitude={10}
@@ -119,24 +119,7 @@ export default function AboutPage() {
           </div>
         </motion.div>
 
-        {/* Localisation */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-10 bg-white/70 p-4 sm:p-6 rounded-xl
-  shadow"
-        >
-          <h2 className="text-2xl font-bold text-[#1b140d] mb-2">Où nous trouver ?</h2>
-          <p className="text-[#1c140d] mb-4">Retrouvez-nous au cœur de Paris, à deux pas de la place de la République.</p>
-          <iframe
-            className="w-full rounded-lg h-64"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!..."
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-        </motion.div>
+        
       </div>
     </div>
   );

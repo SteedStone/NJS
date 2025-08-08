@@ -12,11 +12,18 @@ export type Product = {
   id: string;
   name: string;
   price: number;
-  quantity: number;
+  totalQuantity: number;
   image?: string;
   description?: string;
   categories?: string[];  
   types?: string[];
+  availability: {
+    bakeryId: string;
+    bakeryName: string;
+    bakeryAddress?: string;
+    quantity: number;
+    productId: string;
+  }[];
 };
 
 
@@ -54,14 +61,24 @@ export default function OrderPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/products")
+    fetch("/api/products/cross-bakery")
       .then((res) => res.json())
       .then((data) => {
-        setProducts(data);
+        // Ensure data is an array before setting it
+        if (Array.isArray(data)) {
+          setProducts(data);
+        } else {
+          console.error("API returned non-array data:", data);
+          setProducts([]);
+        }
         setLoading(false);
       })
-      .catch(() => setLoading(false)); // Important pour éviter blocage en cas d'erreur
-  }, []);
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+        setProducts([]);
+        setLoading(false);
+      });
+  }, []); 
 
   // Initialize selected quantities
   useEffect(() => {
@@ -83,7 +100,7 @@ export default function OrderPage() {
     setSelectedQuantities(prev => {
       const current = prev[productId] || 0;
       const product = products.find(p => p.id === productId);
-      if (product && current < product.quantity) {
+      if (product && current < product.totalQuantity) {
         return {...prev, [productId]: current + 1};
       }
       return prev;
@@ -201,7 +218,7 @@ export default function OrderPage() {
         </div>
       ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-        {products
+        {(products || [])
           .filter((p) =>
             selectedCategories.length === 0 ||
             p.categories?.some((cat) => selectedCategories.includes(cat))
@@ -210,7 +227,7 @@ export default function OrderPage() {
             p.name.toLowerCase().includes(searchTerm)
           )
           .map((product) => {
-            const isAvailable = product.quantity > 0;
+            const isAvailable = product.totalQuantity > 0;
             const selectedQuantity = selectedQuantities[product.id] || 0;
             const isInCart = cart.some((item) => item.id === product.id);
 
@@ -243,9 +260,19 @@ export default function OrderPage() {
                     </span>
                   ))}
                   </div>
-                  <p className="text-sm text-gray-600">
-                    {isAvailable ? product.quantity : 0} disponibles 
-                  </p>
+                  <div className="text-sm text-gray-600">
+                    <p className="font-medium">
+                      {isAvailable ? product.totalQuantity : 0} disponibles au total
+                    </p>
+                    <div className="mt-1 space-y-1">
+                      {product.availability.map((bakery, idx) => (
+                        <p key={idx} className="text-xs flex justify-between">
+                          <span className="font-medium">{bakery.bakeryName}:</span>
+                          <span>{bakery.quantity} disponibles</span>
+                        </p>
+                      ))}
+                    </div>
+                  </div>
                   <p className="text-lg font-bold text-[#1c140d]">
                     {new Intl.NumberFormat("fr-FR", {
                       style: "currency",
@@ -266,7 +293,7 @@ export default function OrderPage() {
                     <input
                       type="number"
                       min={0}
-                      max={product.quantity}
+                      max={product.totalQuantity}
                       value={selectedQuantity}
                       onChange={(e) =>
                         handleQuantityChange(
@@ -281,7 +308,7 @@ export default function OrderPage() {
                     <motion.button
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleIncrement(product.id)}
-                      disabled={!isAvailable || selectedQuantity >= product.quantity}
+                      disabled={!isAvailable || selectedQuantity >= product.totalQuantity}
                       className="w-10 h-10 flex items-center justify-center bg-[#f3ede7] rounded-full disabled:opacity-50 text-lg font-semibold"
                     >
                       +
@@ -318,7 +345,7 @@ export default function OrderPage() {
       )}
 
       {/* 🛑 Aucun produit trouvé */}
-      {!loading && products.filter((p) =>
+      {!loading && (products || []).filter((p) =>
         (selectedCategories.length === 0 || p.categories?.some((cat) => selectedCategories.includes(cat))) &&
         p.name.toLowerCase().includes(searchTerm)
       ).length === 0 && (

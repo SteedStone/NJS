@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
     });
 
     if (res.ok) {
-      router.push("/admin/dashboard");
+      router.push("/admin/bakery-selection");
     } else {
       setError("Mot de passe incorrect.");
     }

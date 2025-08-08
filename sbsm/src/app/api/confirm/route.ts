@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { PrismaClient } from "@prisma/client";
 import { Resend } from "resend";
+import { BAKERIES } from "../../constants/bakeries";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
@@ -25,36 +26,77 @@ export async function POST(req: Request) {
     }
 
     const cart = JSON.parse(metadata.cart);
-    const pin = generatePIN();
+    const pin = metadata.pin || generatePIN(); // Use PIN from metadata or generate new one
 
-    const order = await prisma.order.create({
-      data: {
-        name: metadata.customerName,
-        email: metadata.customerEmail,
-        phone: metadata.customerPhone || "",
-        bakery: metadata.customerBakery || "",
-        time: metadata.customerTime || "", // nouveau champ
-        items: {
-          create: cart.map((item: any) => ({
-            quantity: item.quantity,
-            product: { connect: { id: item.productId } },
-          })),
-        },
-        pin : pin, // ← nouveau champ ici
+    // First, find all the correct bakery-specific products and create order items
+    const orderItems = [];
+    
+    for (const item of cart) {
+      // Find the product that belongs to the selected bakery
+      const bakeryProduct = await prisma.product.findFirst({
+        where: {
+          AND: [
+            { 
+              OR: [
+                { id: item.productId },
+                { name: item.name } // fallback in case productId is from different bakery
+              ]
+            },
+            { 
+              OR: [
+                { bakeryId: metadata.bakeryId },
+                { bakery: { name: metadata.customerBakery } }
+              ]
+            }
+          ]
+        }
+      });
 
+      if (bakeryProduct) {
+        orderItems.push({
+          productId: bakeryProduct.id,
+          quantity: item.quantity,
+        });
+
+        // Update inventory
+        await prisma.product.update({
+          where: { id: bakeryProduct.id },
+          data: {
+            quantity: {
+              decrement: item.quantity,
+            },
+          },
+        });
+      } else {
+        console.warn(`Product not found for bakery ${metadata.customerBakery}:`, item);
+      }
+    }
+
+    // Create order data
+    const orderData: any = {
+      name: metadata.customerName,
+      email: metadata.customerEmail,
+      phone: metadata.customerPhone || "",
+      bakeryName: metadata.customerBakery || "",
+      time: metadata.customerTime || "",
+      paymentMethod: metadata.paymentMethod || "stripe",
+      isPaid: true, // Stripe payments are always paid
+      status: "pending",
+      items: {
+        create: orderItems
       },
+      pin: pin,
+    };
+
+    // Only add bakeryId if it exists
+    if (metadata.bakeryId) {
+      orderData.bakeryId = metadata.bakeryId;
+    }
+    
+    const order = await prisma.order.create({
+      data: orderData,
       include: { items: true },
     });
-    for (const item of cart) {
-        await prisma.product.update({
-            where: { id: item.productId },
-            data: {
-            quantity: {
-                decrement: item.quantity,
-            },
-            },
-        });
-        }
 
     await resend.emails.send({
       from: process.env.EMAIL_FROM!,
