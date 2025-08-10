@@ -70,7 +70,7 @@ export default function SuccessClient() {
     <div className="text-left">
       <p className="mb-4">Merci {order.name}, votre commande a été confirmée !</p>
       
-      {paymentType === "bakery" && order.pin && (
+      {order.pin && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
           <div className="flex">
             <div className="ml-3">

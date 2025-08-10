@@ -72,17 +72,14 @@ export async function POST(req: Request) {
           continue;
         }
 
-        // Check if there's enough stock
-        if (bakeryProduct.quantity < item.quantity) {
-          throw new Error(`Insufficient stock for product ${bakeryProduct.name}. Available: ${bakeryProduct.quantity}, Requested: ${item.quantity}`);
-        }
-
         orderItems.push({
           productId: bakeryProduct.id,
           quantity: item.quantity,
         });
 
         // Update inventory within the transaction
+        // For Stripe payments, we honor the payment even if stock is low
+        // since the customer has already paid
         await tx.product.update({
           where: { id: bakeryProduct.id },
           data: {
