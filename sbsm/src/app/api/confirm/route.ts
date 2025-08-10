@@ -41,38 +41,49 @@ export async function POST(req: Request) {
     const cart = JSON.parse(metadata.cart);
     const pin = metadata.pin || generatePIN(); // Use PIN from metadata or generate new one
 
-    // First, find all the correct bakery-specific products and create order items
-    const orderItems = [];
-    
-    for (const item of cart) {
-      // Find the product that belongs to the selected bakery
-      const bakeryProduct = await prisma.product.findFirst({
-        where: {
-          AND: [
-            { 
-              OR: [
-                { id: item.productId },
-                { name: item.name } // fallback in case productId is from different bakery
-              ]
-            },
-            { 
-              OR: [
-                { bakeryId: metadata.bakeryId },
-                { bakery: { name: metadata.customerBakery } }
-              ]
-            }
-          ]
-        }
-      });
+    // Use a transaction to ensure atomicity and prevent race conditions  
+    const order = await prisma.$transaction(async (tx) => {
+      // First, find all the correct bakery-specific products and create order items
+      const orderItems = [];
+      
+      for (const item of cart) {
+        // Find the product that belongs to the selected bakery
+        const bakeryProduct = await tx.product.findFirst({
+          where: {
+            AND: [
+              { 
+                OR: [
+                  { id: item.productId },
+                  { name: item.name } // fallback in case productId is from different bakery
+                ]
+              },
+              { 
+                OR: [
+                  { bakeryId: metadata.bakeryId },
+                  { bakery: { name: metadata.customerBakery } }
+                ]
+              }
+            ]
+          }
+        });
 
-      if (bakeryProduct) {
+        if (!bakeryProduct) {
+          console.warn(`Product not found for bakery ${metadata.customerBakery}:`, item);
+          continue;
+        }
+
+        // Check if there's enough stock
+        if (bakeryProduct.quantity < item.quantity) {
+          throw new Error(`Insufficient stock for product ${bakeryProduct.name}. Available: ${bakeryProduct.quantity}, Requested: ${item.quantity}`);
+        }
+
         orderItems.push({
           productId: bakeryProduct.id,
           quantity: item.quantity,
         });
 
-        // Update inventory
-        await prisma.product.update({
+        // Update inventory within the transaction
+        await tx.product.update({
           where: { id: bakeryProduct.id },
           data: {
             quantity: {
@@ -80,36 +91,34 @@ export async function POST(req: Request) {
             },
           },
         });
-      } else {
-        console.warn(`Product not found for bakery ${metadata.customerBakery}:`, item);
       }
-    }
 
-    // Create order data
-    const orderData: any = {
-      name: metadata.customerName,
-      email: metadata.customerEmail,
-      phone: metadata.customerPhone || "",
-      bakeryName: metadata.customerBakery || "",
-      time: metadata.customerTime || "",
-      paymentMethod: metadata.paymentMethod || "stripe",
-      isPaid: true, // Stripe payments are always paid
-      status: "pending",
-      sessionId: sessionId, // Store sessionId to prevent duplicates
-      items: {
-        create: orderItems
-      },
-      pin: pin,
-    };
+      // Create order data
+      const orderData: any = {
+        name: metadata.customerName,
+        email: metadata.customerEmail,
+        phone: metadata.customerPhone || "",
+        bakeryName: metadata.customerBakery || "",
+        time: metadata.customerTime || "",
+        paymentMethod: metadata.paymentMethod || "stripe",
+        isPaid: true, // Stripe payments are always paid
+        status: "pending",
+        sessionId: sessionId, // Store sessionId to prevent duplicates
+        items: {
+          create: orderItems
+        },
+        pin: pin,
+      };
 
-    // Only add bakeryId if it exists
-    if (metadata.bakeryId) {
-      orderData.bakeryId = metadata.bakeryId;
-    }
-    
-    const order = await prisma.order.create({
-      data: orderData,
-      include: { items: true },
+      // Only add bakeryId if it exists
+      if (metadata.bakeryId) {
+        orderData.bakeryId = metadata.bakeryId;
+      }
+      
+      return await tx.order.create({
+        data: orderData,
+        include: { items: true },
+      });
     });
 
     await resend.emails.send({

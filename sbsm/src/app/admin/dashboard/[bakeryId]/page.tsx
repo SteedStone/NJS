@@ -1137,7 +1137,8 @@ export default function BakeryDashboardPage() {
                         <p>📧 {order.email}</p>
                         {order.phone && <p>📱 {order.phone}</p>}
                         {order.time && <p>⏰ {order.time}</p>}
-                        {order.pin && <p>🔢 PIN: {order.pin}</p>}
+                        <p>📅 {new Date(order.createdAt).toLocaleDateString('fr-FR')}</p>
+
                       </div>
 
                       <div className="mb-3">
@@ -1147,6 +1148,7 @@ export default function BakeryDashboardPage() {
                             <li key={idx} className="text-sm flex justify-between">
                               <span>{item.quantity}x {item.product.name}</span>
                               <span>{(item.quantity * item.product.price).toFixed(2)} €</span>
+
                             </li>
                           ))}
                         </ul>
@@ -1313,8 +1315,14 @@ export default function BakeryDashboardPage() {
                         <p>📧 {order.email}</p>
                         {order.phone && <p>📱 {order.phone}</p>}
                         <p>📅 {new Date(order.createdAt).toLocaleDateString('fr-FR')}</p>
-                      </div>
+                        <h4 className="font-medium mb-2">Résumé:</h4>
+                        {order.items.map((item, idx) => (
+                                                    <li key={idx} className="text-sm flex justify-between">
+                                                      <span>{item.quantity}x {item.product.name}</span>
+                                                    </li>
+                                                  ))}
 
+                      </div>
                       <div>
                         <div className="text-right font-semibold">
                           Total: {order.items.reduce((sum, item) => 

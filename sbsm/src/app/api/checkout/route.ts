@@ -26,33 +26,43 @@ export async function POST(req: Request) {
     });
 
     if (paymentMethod === "bakery") {
-      // First, find all the correct bakery-specific products
-      const orderItems = [];
-      
-      for (const item of cart) {
-        // Find the product that belongs to the selected bakery
-        const bakeryProduct = await prisma.product.findFirst({
-          where: {
-            AND: [
-              { 
-                OR: [
-                  { id: item.productId },
-                  { name: item.name } // fallback in case productId is from different bakery
-                ]
-              },
-              { bakeryId: bakery?.id }
-            ]
-          }
-        });
+      // Use a transaction to ensure atomicity and prevent race conditions
+      const result = await prisma.$transaction(async (tx) => {
+        // First, find all the correct bakery-specific products and validate stock
+        const orderItems = [];
+        
+        for (const item of cart) {
+          // Find the product that belongs to the selected bakery
+          const bakeryProduct = await tx.product.findFirst({
+            where: {
+              AND: [
+                { 
+                  OR: [
+                    { id: item.productId },
+                    { name: item.name } // fallback in case productId is from different bakery
+                  ]
+                },
+                { bakeryId: bakery?.id }
+              ]
+            }
+          });
 
-        if (bakeryProduct) {
+          if (!bakeryProduct) {
+            throw new Error(`Product not found for bakery ${customer.bakery}: ${item.name}`);
+          }
+
+          // Check if there's enough stock
+          if (bakeryProduct.quantity < item.quantity) {
+            throw new Error(`Insufficient stock for product ${bakeryProduct.name}. Available: ${bakeryProduct.quantity}, Requested: ${item.quantity}`);
+          }
+
           orderItems.push({
             productId: bakeryProduct.id,
             quantity: item.quantity,
           });
 
-          // Update inventory
-          await prisma.product.update({
+          // Update inventory within the transaction
+          await tx.product.update({
             where: { id: bakeryProduct.id },
             data: {
               quantity: {
@@ -60,45 +70,45 @@ export async function POST(req: Request) {
               },
             },
           });
-        } else {
-          console.warn(`Product not found for bakery ${customer.bakery}:`, item);
         }
-      }
 
-      // Create order directly in database for bakery payment
-      const orderData: any = {
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-        bakeryName: customer.bakery,
-        pin: orderPin,
-        time: customer.time,
-        paymentMethod: "bakery",
-        isPaid: false,
-        status: "pending",
-        items: {
-          create: orderItems
-        }
-      };
-
-      // Only add bakeryId if bakery exists
-      if (bakery?.id) {
-        orderData.bakeryId = bakery.id;
-      }
-
-      const order = await prisma.order.create({
-        data: orderData,
-        include: {
+        // Create order directly in database for bakery payment
+        const orderData: any = {
+          name: customer.name,
+          email: customer.email,
+          phone: customer.phone,
+          bakeryName: customer.bakery,
+          pin: orderPin,
+          time: customer.time,
+          paymentMethod: "bakery",
+          isPaid: false,
+          status: "pending",
           items: {
-            include: {
-              product: true
+            create: orderItems
+          }
+        };
+
+        // Only add bakeryId if bakery exists
+        if (bakery?.id) {
+          orderData.bakeryId = bakery.id;
+        }
+
+        const order = await tx.order.create({
+          data: orderData,
+          include: {
+            items: {
+              include: {
+                product: true
+              }
             }
           }
-        }
+        });
+
+        return order;
       });
 
       return NextResponse.json({ 
-        orderId: order.id, 
+        orderId: result.id, 
         pin: orderPin,
         message: "Commande créée avec succès" 
       });

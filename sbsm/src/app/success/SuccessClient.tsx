@@ -7,13 +7,17 @@ export default function SuccessClient() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<any>(null);
+  const [processed, setProcessed] = useState(false);
 
   useEffect(() => {
+    if (processed) return; // Prevent double processing
     const sessionId = searchParams.get("session_id");
     const orderId = searchParams.get("orderId");
     const pin = searchParams.get("pin");
     const paymentType = searchParams.get("payment");
 
+    setProcessed(true); // Mark as being processed
+    
     if (paymentType === "bakery" && orderId && pin) {
       // Handle bakery payment flow
       const fetchBakeryOrder = async () => {

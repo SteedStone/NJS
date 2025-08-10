@@ -70,6 +70,7 @@ export default function FormClient() {
   const [selectedBakery, setSelectedBakery] = useState("");
   const [time, setTime] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("stripe");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get bakeries that have all items in cart in stock
   const getAvailableBakeries = () => {
@@ -134,6 +135,9 @@ export default function FormClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isSubmitting) return; // Prevent double submission
+    setIsSubmitting(true);
+
     const enrichedCart = cart.map((item) => {
       const product = products.find((p) => p.id === item.productId);
       return {
@@ -175,6 +179,8 @@ export default function FormClient() {
     } catch (err) {
       console.error("Erreur lors de l'envoi au paiement :", err);
       alert("Une erreur est survenue.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -317,9 +323,12 @@ export default function FormClient() {
         
         <button
           type="submit"
-          className="bg-[#1c140d] text-white px-4 py-2 rounded-xl text-sm font-semibold"
+          disabled={isSubmitting}
+          className="bg-[#1c140d] text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {paymentMethod === "bakery" ? "Réserver la commande" : "Envoyer la commande"}
+          {isSubmitting 
+            ? "Traitement..." 
+            : (paymentMethod === "bakery" ? "Réserver la commande" : "Envoyer la commande")}
         </button>
       </form>
     </div>
