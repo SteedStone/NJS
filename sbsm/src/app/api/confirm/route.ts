@@ -41,84 +41,76 @@ export async function POST(req: Request) {
     const cart = JSON.parse(metadata.cart);
     const pin = metadata.pin || generatePIN(); // Use PIN from metadata or generate new one
 
-    // Use a transaction to ensure atomicity and prevent race conditions  
-    const order = await prisma.$transaction(async (tx) => {
-      // First, find all the correct bakery-specific products and create order items
-      const orderItems = [];
-      
-      for (const item of cart) {
-        // Find the product that belongs to the selected bakery
-        const bakeryProduct = await tx.product.findFirst({
-          where: {
-            AND: [
-              { 
-                OR: [
-                  { id: item.productId },
-                  { name: item.name } // fallback in case productId is from different bakery
-                ]
-              },
-              { 
-                OR: [
-                  { bakeryId: metadata.bakeryId },
-                  { bakery: { name: metadata.customerBakery } }
-                ]
-              }
-            ]
-          }
-        });
-
-        if (!bakeryProduct) {
-          console.warn(`Product not found for bakery ${metadata.customerBakery}:`, item);
-          continue;
-        }
-
-        orderItems.push({
-          productId: bakeryProduct.id,
-          quantity: item.quantity,
-        });
-
-        // Update inventory within the transaction
-        // For Stripe payments, we honor the payment even if stock is low
-        // since the customer has already paid
-        await tx.product.update({
-          where: { id: bakeryProduct.id },
-          data: {
-            quantity: {
-              decrement: item.quantity,
-            },
-          },
-        });
+    // Get all products for the bakery
+    const bakeryProducts = await prisma.product.findMany({
+      where: {
+        OR: [
+          { bakeryId: metadata.bakeryId },
+          { bakery: { name: metadata.customerBakery } }
+        ]
       }
-
-      // Create order data
-      const orderData: any = {
-        name: metadata.customerName,
-        email: metadata.customerEmail,
-        phone: metadata.customerPhone || "",
-        bakeryName: metadata.customerBakery || "",
-        time: metadata.customerTime || "",
-        paymentMethod: metadata.paymentMethod || "stripe",
-        isPaid: true, // Stripe payments are always paid
-        status: "pending",
-        sessionId: sessionId, // Store sessionId to prevent duplicates
-        items: {
-          create: orderItems
-        },
-        pin: pin,
-      };
-
-      // Only add bakeryId if it exists
-      if (metadata.bakeryId) {
-        orderData.bakeryId = metadata.bakeryId;
-      }
-      
-      return await tx.order.create({
-        data: orderData,
-        include: { items: true },
-      });
     });
 
-    await resend.emails.send({
+    const orderItems = [];
+    
+    for (const item of cart) {
+      // Find the product that belongs to the selected bakery
+      const bakeryProduct = bakeryProducts.find(p => 
+        p.id === item.productId || p.name === item.name
+      );
+
+      if (!bakeryProduct) {
+        throw new Error(`Product not found for bakery ${metadata.customerBakery}: ${item.name}`);
+      }
+
+      orderItems.push({
+        productId: bakeryProduct.id,
+        quantity: item.quantity,
+      });
+
+      // Update inventory immediately
+      const newQuantity = Math.max(0, bakeryProduct.quantity - item.quantity);
+      await prisma.product.update({
+        where: { id: bakeryProduct.id },
+        data: { quantity: newQuantity },
+      });
+    }
+
+    // Validate that we have at least one order item
+    if (orderItems.length === 0) {
+      throw new Error(`No valid products found for bakery ${metadata.customerBakery}. Cannot create empty order.`);
+    }
+
+    // Create order data
+    const orderData: any = {
+      name: metadata.customerName,
+      email: metadata.customerEmail,
+      phone: metadata.customerPhone || "",
+      bakeryName: metadata.customerBakery || "",
+      time: metadata.customerTime || "",
+      paymentMethod: metadata.paymentMethod || "stripe",
+      isPaid: true, // Stripe payments are always paid
+      status: "pending",
+      sessionId: sessionId, // Store sessionId to prevent duplicates
+      items: {
+        create: orderItems
+      },
+      pin: pin,
+    };
+
+    // Only add bakeryId if it exists
+    if (metadata.bakeryId) {
+      orderData.bakeryId = metadata.bakeryId;
+    }
+    
+    const order = await prisma.order.create({
+      data: orderData,
+      include: { items: true },
+    });
+
+    // Send confirmation email (don't fail the order if email fails)
+    try {
+      await resend.emails.send({
       from: process.env.EMAIL_FROM!,
       to: metadata.customerEmail,
       subject: "Confirmation de votre commande",
@@ -147,7 +139,11 @@ export async function POST(req: Request) {
           <p style="color: #999; font-size: 12px;">Cet email a été généré automatiquement. Ne pas répondre.</p>
         </div>
       `,
-    });
+      });
+    } catch (emailError) {
+      console.error("Failed to send confirmation email:", emailError);
+      // Continue anyway - order was created successfully
+    }
 
     return NextResponse.json(order);
   } catch (error) {

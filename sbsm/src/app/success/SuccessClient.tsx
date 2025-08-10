@@ -82,9 +82,14 @@ export default function SuccessClient() {
               </div>
               <p className="text-sm text-yellow-700 mt-2">
                 Présentez ce code PIN lors du retrait de votre commande en boulangerie.
-                <br />
-                <strong>Paiement à effectuer sur place.</strong>
+                {paymentType === "bakery" && (
+                  <>
+                    <br />
+                    <strong>Paiement à effectuer sur place.</strong>
+                  </>
+                )}
               </p>
+              
             </div>
           </div>
         </div>
